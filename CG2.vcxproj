@@ -109,6 +109,7 @@ copy "$(windowsSdkDir)bin$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dxi
     <ClInclude Include="System\Adapter.h" />
     <ClInclude Include="System\DirectXCommon.h" />
     <ClInclude Include="System\WinApp.h" />
+    <ClInclude Include="Vector4.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Object3d.PS.hlsl">
