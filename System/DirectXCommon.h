@@ -23,6 +23,8 @@ public:
 
 	void PostDraw();
 
+	void ImGuiNewFrame();
+
 	/// <summary>
 	/// デバイスの取得
 	/// </summary>
@@ -53,12 +55,16 @@ private:
 	ID3D12CommandAllocator* commandAllocator_ = nullptr;
 	//ディスクリプタヒープの生成
 	ID3D12DescriptorHeap* rtvDescriptorHeap_ = nullptr;
+	ID3D12DescriptorHeap* srvDescriptorHeap_ = nullptr;
 	// スワップチェーンを生成する
+	DXGI_SWAP_CHAIN_DESC1 swapChainDesc_{};
 	IDXGISwapChain4* swapChain_ = nullptr;
 	//SwapChainからResourceを引っ張ってくる
 	ID3D12Resource* swapChainResources_[2] = { nullptr };
 	// RTVを2個作るのでディスクリプタを2つ用意
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandles_[2]{};
+	// RTVの設定
+	D3D12_RENDER_TARGET_VIEW_DESC rtvDesc_{};
 	// 初期値0でFenceを作る
 	ID3D12Fence* fence_ = nullptr;
 	uint64_t fenceValue_ = 0;
@@ -90,6 +96,11 @@ private:
 	/// レンダーターゲットを生成
 	/// </summary>
 	void CreateFinalRenderTargets();
+
+	/// <summary>
+	/// ImGui初期化
+	/// </summary>
+	void InitializeImGui();
 
 	/// <summary>
 	/// フェンス生成

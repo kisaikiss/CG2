@@ -1,6 +1,6 @@
 #include <dxgidebug.h>
 
-#include "System/Adapter.h"
+#include "Adapter.h"
 
 //Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
@@ -11,6 +11,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//ウィンドウのxボタンが押されるまでループ
 	while (adapter->ProcessMessage() == 0) {
 		//ゲームの処理
+		adapter->FrameStart();
+		ImGui::ShowDemoWindow();
+
 		adapter->PreDraw();
 
 		adapter->DrawTriangle();

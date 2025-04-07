@@ -4,6 +4,10 @@
 //ウィンドウに発生する様々なイベントを処理するための関数
 //ウィンドウプロシージャ
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wpram, LPARAM lparam) {
+	//ImGuiにメッセージを渡す。ImGuiが処理中なら後続の処理を打ち切る
+	if (ImGui_ImplWin32_WndProcHandler(hwnd, msg, wpram, lparam)) {
+		return true;
+	}
 	//メッセージに応じてゲーム固有の処理を行う
 	switch (msg) {
 		//ウィンドウが破棄された
@@ -48,7 +52,7 @@ bool WinApp::Create(const std::wstring& titleName, const std::wstring& windowCla
 		wrc.bottom - wrc.top,	//ウィンドウ縦幅
 		nullptr,				//親ウィンドウハンドル
 		nullptr,				//メニューハンドル
-		wndClass_.hInstance,			//インスタンスハンドル
+		wndClass_.hInstance,	//インスタンスハンドル
 		nullptr					//オプション
 	);
 
