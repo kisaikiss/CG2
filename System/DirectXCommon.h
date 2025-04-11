@@ -6,6 +6,9 @@
 #include <format>
 #include <dxgidebug.h>
 
+#include "externals/DirectXTex/DirectXTex.h"
+#include <externals/DirectXTex/d3dx12.h>
+
 #include "WinApp.h"
 #include "../ConvertString.h"
 
@@ -37,6 +40,8 @@ public:
 	/// <returns>描画コマンドリスト</returns>
 	ID3D12GraphicsCommandList* GetCommandList() const { return commandList_; }
 
+
+	D3D12_GPU_DESCRIPTOR_HANDLE GetTextureSrvHandleGpu() const { return textureSrvHandleGpu_; }
 
 private:
 	WinApp* winApp_ = nullptr;
@@ -73,6 +78,15 @@ private:
 	// TransitionBarrierの設定
 	D3D12_RESOURCE_BARRIER barrier_{};
 
+	//テクスチャリソース
+	ID3D12Resource* textureResource_ = nullptr;
+	//mip
+	DirectX::ScratchImage mipImages_{};
+
+	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGpu_{};
+
+	ID3D12Resource* intermediateResource_ = nullptr;
+
 	//バックバッファの大きさ
 	int32_t backBufferWidth_ = 0;
 	int32_t backBufferHeight_ = 0;
@@ -98,6 +112,11 @@ private:
 	void CreateFinalRenderTargets();
 
 	/// <summary>
+	/// シェーダリソースビューを生成
+	/// </summary>
+	void CreateShaderResourceView();
+
+	/// <summary>
 	/// ImGui初期化
 	/// </summary>
 	void InitializeImGui();
@@ -109,3 +128,13 @@ private:
 
 };
 
+/// <summary>
+/// Resource作成関数
+/// </summary>
+/// <param name="device"></param>
+/// <param name="sizeInBytes"></param>
+/// <returns></returns>
+ID3D12Resource* CreateBufferResource(ID3D12Device* device, size_t sizeInBytes);
+
+[[nodiscard]]
+ID3D12Resource* UploadTextureData(ID3D12Resource* texture, const DirectX::ScratchImage& mipImages, ID3D12Device* device, ID3D12GraphicsCommandList* commandList);

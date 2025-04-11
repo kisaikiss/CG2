@@ -22,9 +22,9 @@ public:
 	void Initialize();
 	void Finalize();
 
-	void InitializeDirectXCompiler();
-
 	bool ProcessMessage();
+
+	void UpdateTriangle();
 
 	void DrawTriangle();
 
@@ -36,6 +36,10 @@ public:
 private:
 	std::shared_ptr<WinApp> winApp_;
 	std::shared_ptr<DirectXCommon> directXCommon_;
+	//DXC関連
+	IDxcUtils* dxcUtils_ = nullptr;
+	IDxcCompiler3* dxcCompiler_ = nullptr;
+	IDxcIncludeHandler* includeHandler_ = nullptr;
 	// シリアライズしてバイナリにする
 	ID3DBlob* signatureBlob_ = nullptr;
 	ID3DBlob* errorBlob_ = nullptr;
@@ -59,6 +63,7 @@ private:
 
 	//データを書き込む
 	Matrix4x4* wvpData_ = nullptr;
+	Vector4* materialData_ = nullptr;
 
 	ID3D12RootSignature* rootSignature_ = nullptr;
 
@@ -69,5 +74,20 @@ private:
 	//Shaderをコンパイルする
 	IDxcBlob* vertexShaderBlob_ = nullptr;
 	IDxcBlob* pixelShaderBlob_ = nullptr;
+
+	/// <summary>
+	/// DXC初期化
+	/// </summary>
+	void InitializeDirectXCompiler();
+
+	/// <summary>
+	/// パイプラインステートオブジェクトの生成
+	/// </summary>
+	void CreatePSO();
+
+	/// <summary>
+	/// 三角形のリソースを生成
+	/// </summary>
+	void CreateTriangleResource();
 };
 

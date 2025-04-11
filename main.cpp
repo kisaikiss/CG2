@@ -5,6 +5,9 @@
 //Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
+	//COM初期化
+	CoInitializeEx(0, COINIT_MULTITHREADED);
+
 	Adapter* adapter = new Adapter();
 	adapter->Initialize();
 
@@ -12,7 +15,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	while (adapter->ProcessMessage() == 0) {
 		//ゲームの処理
 		adapter->FrameStart();
-		ImGui::ShowDemoWindow();
+		//ImGui::ShowDemoWindow();
+
+		adapter->UpdateTriangle();
 
 		adapter->PreDraw();
 
@@ -26,5 +31,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	adapter->Finalize();
 	delete adapter;
+	CoUninitialize();
 	return 0;
 }

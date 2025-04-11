@@ -1,3 +1,5 @@
+#include "Object3d.hlsli"
+
 // VertexShader
 // 与えられた座標を同次クリップ空間に変換する
 
@@ -7,16 +9,15 @@ struct TransformationMatrix
 };
 
 ConstantBuffer<TransformationMatrix> gTransformationMatrix : register(b0);
-struct VertexShaderOutput {
-    float4 position : SV_POSITION;
-};
 
 struct VertexShaderInput {
     float4 position : POSITION0;
+    float2 texcord : TEXCOORD0;
 };
 
 VertexShaderOutput main(VertexShaderInput input) {
     VertexShaderOutput output;
     output.position = mul(input.position, gTransformationMatrix.WVP);
+    output.texcoord = input.texcord;
     return output;
 }

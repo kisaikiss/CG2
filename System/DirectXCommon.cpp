@@ -4,7 +4,6 @@
 #include "imgui_impl_dx12.h"
 #include "imgui_impl_win32.h"
 
-
 #pragma comment(lib,"d3d12.lib")
 #pragma comment(lib,"dxgi.lib")
 #pragma comment(lib,"dxguid.lib")
@@ -20,6 +19,105 @@ ID3D12DescriptorHeap* CreateDescriptorHeap(
 	HRESULT hr = device->CreateDescriptorHeap(&descriptorHeapDesc, IID_PPV_ARGS(&descriptorHeap));
 	assert(SUCCEEDED(hr));
 	return descriptorHeap;
+}
+
+ID3D12Resource* CreateBufferResource(ID3D12Device* device, size_t sizeInBytes) {
+	//リソース用のヒープの設定
+	D3D12_HEAP_PROPERTIES uploadHeapProperties{};
+	uploadHeapProperties.Type = D3D12_HEAP_TYPE_UPLOAD; // UploadHeapを使う
+	// リソースの設定
+	D3D12_RESOURCE_DESC resourceDesc{};
+	// バッファリソース。テクスチャの場合は右記の設定をする
+	resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+	resourceDesc.Width = sizeInBytes; // リソースのサイズ。
+	// バッファの場合はこれらは1にする決まり
+	resourceDesc.Height = 1;
+	resourceDesc.DepthOrArraySize = 1;
+	resourceDesc.MipLevels = 1;
+	resourceDesc.SampleDesc.Count = 1;
+	// バッファの場合はこれにする決まり
+	resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+	// 実際にリソースを作る
+	ID3D12Resource* resource = nullptr;
+	HRESULT hr = device->CreateCommittedResource(&uploadHeapProperties, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&resource));
+	assert(SUCCEEDED(hr));
+
+	return resource;
+}
+
+DirectX::ScratchImage LordTexture(const std::string& filePath) {
+	//テクスチャファイルを読んでプログラムを扱えるようにする
+	DirectX::ScratchImage image{};
+	std::wstring filePathW = ConvertString(filePath);
+	HRESULT hr = DirectX::LoadFromWICFile(filePathW.c_str(), DirectX::WIC_FLAGS_FORCE_SRGB, nullptr, image);
+	assert(SUCCEEDED(hr));
+
+	//ミニマップ(元画像より小さなテクスチャ群)の作成
+	DirectX::ScratchImage mipImages{};
+	hr = DirectX::GenerateMipMaps(image.GetImages(), image.GetImageCount(), image.GetMetadata(), DirectX::TEX_FILTER_SRGB, 0, mipImages);
+	assert(SUCCEEDED(hr));
+
+	//ミニマップ付きのデータを返す
+	return mipImages;
+}
+
+ID3D12Resource* CreateTextureResource(ID3D12Device* device, const DirectX::TexMetadata& metadata) {
+#pragma region 1.metadataを基にResourceの設定
+	D3D12_RESOURCE_DESC resourceDesc{};
+	resourceDesc.Width = UINT(metadata.width); // Textrueの幅
+	resourceDesc.Height = UINT(metadata.height);// Tedtureの高さ
+	resourceDesc.MipLevels = UINT16(metadata.mipLevels);//mipmapの数
+	resourceDesc.DepthOrArraySize = UINT16(metadata.arraySize);//奥行き or 配列Textureの配列数
+	resourceDesc.Format = metadata.format;// テクスチャのフォーマット
+	resourceDesc.SampleDesc.Count = 1; //サンプリングカット。1固定
+	resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION(metadata.dimension);//Textureの次元数。普段使っているのは2次元
+#pragma endregion
+
+#pragma region 2.利用するHeapの設定
+
+	D3D12_HEAP_PROPERTIES heapProperties{};
+	//特殊な運用なら
+	//heapProperties.Type = D3D12_HEAP_TYPE_CUSTOM;//細かい設定を行う
+	//heapProperties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_WRITE_BACK;//WriteBackポリシーでCPUアクセス可能
+	//heapProperties.MemoryPoolPreference = D3D12_MEMORY_POOL_L0; // プリプロセッサの近くに配置
+
+	//普通はVRAM上に作成
+	heapProperties.Type = D3D12_HEAP_TYPE_DEFAULT;
+#pragma endregion
+
+#pragma region 3.Resourceを生成する
+	ID3D12Resource* resource = nullptr;
+	HRESULT hr = device->CreateCommittedResource(
+		&heapProperties,	//ヒープの設定
+		D3D12_HEAP_FLAG_NONE,//ヒープの特殊な設定。特になし
+		&resourceDesc,//リソースの設定
+		D3D12_RESOURCE_STATE_COPY_DEST, //データ転送される設定
+		nullptr, //Clear最適地。使わない
+		IID_PPV_ARGS(&resource));//リソースポインタへのポインタ
+	assert(SUCCEEDED(hr));
+
+	return resource;
+#pragma endregion
+}
+
+[[nodiscard]]
+ID3D12Resource* UploadTextureData(ID3D12Resource* texture, const DirectX::ScratchImage& mipImages, ID3D12Device* device, ID3D12GraphicsCommandList* commandList)
+{
+	std::vector<D3D12_SUBRESOURCE_DATA> subresources;
+	DirectX::PrepareUpload(device, mipImages.GetImages(), mipImages.GetImageCount(), mipImages.GetMetadata(), subresources);
+	uint64_t intermediateSize = GetRequiredIntermediateSize(texture, 0, UINT(subresources.size()));
+	ID3D12Resource* intermediateResource = CreateBufferResource(device, intermediateSize);
+	UpdateSubresources(commandList, texture, intermediateResource, 0, 0, UINT(subresources.size()), subresources.data());
+	// テクスチャへの転送後は利用できるよう、D3D12_RESOURCE_STATE_COPY_DESTからD3D12_RESOURCE_STATE_GENERIC_READへResourceStateを変更する
+	D3D12_RESOURCE_BARRIER barrier{};
+	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+	barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+	barrier.Transition.pResource = texture;
+	barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;
+	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_GENERIC_READ;
+	commandList->ResourceBarrier(1, &barrier);
+	return intermediateResource;
 }
 
 DirectXCommon::~DirectXCommon() {
@@ -43,8 +141,8 @@ DirectXCommon::~DirectXCommon() {
 #ifdef _DEBUG
 	debugController_->Release();
 #endif
-
-
+	textureResource_->Release();
+	intermediateResource_->Release();
 	//リソースリークチェック
 	IDXGIDebug1* debug;
 	if (SUCCEEDED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&debug)))) {
@@ -77,9 +175,9 @@ void DirectXCommon::Initialize(WinApp* winApp, int32_t backBufferWidth, int32_t 
 	//レンダーターゲットの生成
 	CreateFinalRenderTargets();
 
-	//srvディスクリプタヒープ生成、srvはshader内で触るのでtrue
-	srvDescriptorHeap_ = CreateDescriptorHeap(device_, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 128, true);
-
+	//シェーダリソースビューを生成
+	CreateShaderResourceView();
+	
 	//Imgui初期化
 	InitializeImGui();
 
@@ -88,11 +186,11 @@ void DirectXCommon::Initialize(WinApp* winApp, int32_t backBufferWidth, int32_t 
 }
 
 void DirectXCommon::PreDraw() {
+
 	//ImGuiの内部コマンドを生成する
 	ImGui::Render();
 	// これから書き込むバックバッファのインデックスを取得
 	UINT backBufferIndex = swapChain_->GetCurrentBackBufferIndex();
-
 	// TransitionBarrierの設定
 	// 今回のバリアはTransition
 	barrier_.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
@@ -106,7 +204,6 @@ void DirectXCommon::PreDraw() {
 	barrier_.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
 	// TransitionBarrierを張る
 	commandList_->ResourceBarrier(1, &barrier_);
-
 	// 描画先のRTVを設定する
 	commandList_->OMSetRenderTargets(1, &rtvHandles_[backBufferIndex], false, nullptr);
 	// 指定した色で画面全体をクリアする
@@ -115,14 +212,12 @@ void DirectXCommon::PreDraw() {
 	//ImGuiのために描画用DescriptorHeapを設定
 	ID3D12DescriptorHeap* descriptorHeaps[] = { srvDescriptorHeap_ };
 	commandList_->SetDescriptorHeaps(1, descriptorHeaps);
-
 	// 画面に描く処理はすべて終わり、画面に映すので、状態を遷移
 }
 
 void DirectXCommon::PostDraw() {
 	//実際のコマンドリストのImGuiの描画コマンドを積む
 	ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList_);
-
 	// 今回はRenderTargetからPresentにする
 	barrier_.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
 	barrier_.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
@@ -149,13 +244,14 @@ void DirectXCommon::PostDraw() {
 		// イベント待つ
 		WaitForSingleObject(fenceEvent_, INFINITE);
 	}
-
-
+	
 	// 次のフレーム用のコマンドリストを準備
 	hr_ = commandAllocator_->Reset();
 	assert(SUCCEEDED(hr_));
 	hr_ = commandList_->Reset(commandAllocator_, nullptr);
 	assert(SUCCEEDED(hr_));
+
+	
 }
 
 void DirectXCommon::ImGuiNewFrame() {
@@ -315,6 +411,33 @@ void DirectXCommon::CreateFinalRenderTargets() {
 	rtvHandles_[1].ptr = rtvHandles_[0].ptr + device_->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 	// 2つ目を作る
 	device_->CreateRenderTargetView(swapChainResources_[1], &rtvDesc_, rtvHandles_[1]);
+}
+
+void DirectXCommon::CreateShaderResourceView() {
+	//srvディスクリプタヒープ生成、srvはshader内で触るのでtrue
+	srvDescriptorHeap_ = CreateDescriptorHeap(device_, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 128, true);
+	//テクスチャを読んで転送する
+	mipImages_ = LordTexture("resources/uvChecker.png");
+	const DirectX::TexMetadata metadata = mipImages_.GetMetadata();
+	textureResource_ = CreateTextureResource(device_, metadata);
+	//UploadTextureData(textureResource_, mipImages);
+	intermediateResource_ = UploadTextureData(textureResource_, mipImages_, device_, commandList_);
+
+	//メタデータを基にSRVの設定
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
+	srvDesc.Format = metadata.format;
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Texture2D.MipLevels = UINT(metadata.mipLevels);
+
+	//SRVを作成するディスクリプタヒープの場所を決める
+	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCpu = srvDescriptorHeap_->GetCPUDescriptorHandleForHeapStart();
+	textureSrvHandleGpu_ = srvDescriptorHeap_->GetGPUDescriptorHandleForHeapStart();
+	//先頭はImGuiが使うのでその次を使う
+	textureSrvHandleCpu.ptr += device_->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	textureSrvHandleGpu_.ptr += device_->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	//SRVの生成
+	device_->CreateShaderResourceView(textureResource_, &srvDesc, textureSrvHandleCpu);
 }
 
 void DirectXCommon::InitializeImGui() {
