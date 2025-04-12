@@ -93,9 +93,13 @@ void Adapter::Initialize() {
 	CreatePSO();
 
 	CreateTriangleResource();
+
+	CreateSpriteResource();
 }
 
 void Adapter::Finalize() {
+	vertexResourceSprite_->Release();
+	transformationMatrixReourceSprite_->Release();
 	materialResource_->Release();
 	wvpResource_->Release();
 	vertexResource_->Release();
@@ -329,6 +333,57 @@ void Adapter::CreateTriangleResource() {
 	scissorRect_.bottom = kClientHeight;
 }
 
+void Adapter::CreateSpriteResource() {
+	//頂点リソースを作る
+	vertexResourceSprite_ = CreateBufferResource(directXCommon_->GetDevice(), sizeof(VertexData) * 6);
+
+	//VertexBufferView(ResourceをShaderへの入力頂点として処理するためのView)を作成
+	// 頂点バッファビューを作成
+	//リソースの先頭のアドレスから使う
+	vertexBufferViewSprite_.BufferLocation = vertexResourceSprite_->GetGPUVirtualAddress();
+	//使用するリソースのサイズは頂点6つ分のサイズ
+	vertexBufferViewSprite_.SizeInBytes = sizeof(VertexData) * 6;
+	//1頂点あたりのサイズ
+	vertexBufferViewSprite_.StrideInBytes = sizeof(VertexData);
+
+	//頂点リソースにデータを書き込む
+	VertexData* vertexData = nullptr;
+	//書き込むためのアドレスを取得
+	vertexResourceSprite_->Map(0, nullptr, reinterpret_cast<void**>(&vertexData));
+	// 左下
+	vertexData[0].position = { 0.0f,360.0f,0.0f,1.0f };
+	vertexData[0].texcoord = { 0.f,1.0f };
+	// 左上
+	vertexData[1].position = { 0.0f,0.0f,0.0f,1.0f };
+	vertexData[1].texcoord = { 0.0f,0.0f };
+	// 右下
+	vertexData[2].position = { 640.0f,360.0f,0.0f,1.0f };
+	vertexData[2].texcoord = { 1.f,1.f };
+
+	// 左上
+	vertexData[3].position = { 0.0f,0.0f,0.0f,1.0f };
+	vertexData[3].texcoord = { 0.0f,0.0f };
+	// 右上
+	vertexData[4].position = { 640.0f,0.0f,0.0f,1.0f };
+	vertexData[4].texcoord = { 1.0f,0.0f };
+	// 右下
+	vertexData[5].position = { 640.0f,360.0f,0.0f,1.0f };
+	vertexData[5].texcoord = { 1.0f,1.0f };
+
+	//Sprite用のTransformationMatrix用のリソースを作る。Matrix4x4一つ分のサイズを用意する
+	transformationMatrixReourceSprite_ = CreateBufferResource(directXCommon_->GetDevice(), sizeof(Matrix4x4));
+	//データを書き込むためのアドレスを取得
+	transformationMatrixReourceSprite_->Map(0, nullptr, reinterpret_cast<void**>(&transformationMatrixDataSprite_));
+	//単位行列を書き込んでおく
+	*transformationMatrixDataSprite_ = MakeIdentity4x4();
+	//CPUで動かす用のトランスフォーム
+	transformSprite = {
+		{1.0f,1.0f,1.0f},
+		{0.0f,0.0f,0.0f},
+		{0.0f,0.0f,0.0f}
+	};
+}
+
 bool Adapter::ProcessMessage() {
 	return winApp_->ProcessMessage();
 }
@@ -339,6 +394,15 @@ void Adapter::UpdateTriangle() {
 	ImGui::DragFloat3("rotate", &transform_.rotate.x, 0.01f);
 	ImGui::DragFloat2("scale", &transform_.scale.x, 0.01f);
 	ImGui::ColorEdit3("color", &materialData_->x);
+	ImGui::End();
+}
+
+void Adapter::UpdateSprite() {
+	ImGui::Begin("sprite");
+	ImGui::DragFloat3("position", &transformSprite.translate.x, 1.0f);
+	ImGui::DragFloat3("rotate", &transformSprite.rotate.x, 0.01f);
+	ImGui::DragFloat2("scale", &transformSprite.scale.x, 0.01f);
+	//ImGui::ColorEdit3("color", &materialData_->x);
 	ImGui::End();
 }
 
@@ -366,6 +430,20 @@ void Adapter::DrawTriangle() {
 	directXCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResource_->GetGPUVirtualAddress());
 	//SRVのディスクリプタテーブルの先頭を設定。2はルートパラメータ[2]
 	directXCommon_->GetCommandList()->SetGraphicsRootDescriptorTable(2, directXCommon_->GetTextureSrvHandleGpu());
+	//描画! (DrawCall)。3頂点で一つのインスタンス。
+	directXCommon_->GetCommandList()->DrawInstanced(6, 1, 0, 0);
+}
+
+void Adapter::DrawSprite() {
+	directXCommon_->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferViewSprite_);//VBVを設定
+	//Sprite用のWorldViewProjectionMatrixを作る
+	Matrix4x4 worldMatrix = MakeAffineMatrix(transformSprite.scale, transformSprite.rotate, transformSprite.translate);
+	Matrix4x4 viewMatrix = MakeIdentity4x4();
+	Matrix4x4 projectionMatrixSprite = MakeOrthographicMatrix(0.0f, 0.0f, static_cast<float>(winApp_->kWindowWidth), static_cast<float>(winApp_->kWindowHeight), 0.0f, 100.0f);
+	Matrix4x4 worldViewProjectionMatrixSprite = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrixSprite));
+	*transformationMatrixDataSprite_ = worldViewProjectionMatrixSprite;
+	//wvp用CBufferの場所を指定
+	directXCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(1, transformationMatrixReourceSprite_->GetGPUVirtualAddress());
 	//描画! (DrawCall)。3頂点で一つのインスタンス。
 	directXCommon_->GetCommandList()->DrawInstanced(6, 1, 0, 0);
 }

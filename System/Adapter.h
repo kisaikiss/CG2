@@ -26,7 +26,11 @@ public:
 
 	void UpdateTriangle();
 
+	void UpdateSprite();
+
 	void DrawTriangle();
+
+	void DrawSprite();
 
 	void PreDraw();
 
@@ -75,6 +79,13 @@ private:
 	IDxcBlob* vertexShaderBlob_ = nullptr;
 	IDxcBlob* pixelShaderBlob_ = nullptr;
 
+	//スプライト関連
+	ID3D12Resource* vertexResourceSprite_ = nullptr;
+	D3D12_VERTEX_BUFFER_VIEW vertexBufferViewSprite_{};
+	ID3D12Resource* transformationMatrixReourceSprite_ = nullptr;
+	Matrix4x4* transformationMatrixDataSprite_ = nullptr;
+	Transforms transformSprite{};
+
 	/// <summary>
 	/// DXC初期化
 	/// </summary>
@@ -89,5 +100,10 @@ private:
 	/// 三角形のリソースを生成
 	/// </summary>
 	void CreateTriangleResource();
+
+	/// <summary>
+	/// スプライトのリソースを生成
+	/// </summary>
+	void CreateSpriteResource();
 };
 

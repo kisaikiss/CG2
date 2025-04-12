@@ -18,10 +18,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		//ImGui::ShowDemoWindow();
 
 		adapter->UpdateTriangle();
+		adapter->UpdateSprite();
 
 		adapter->PreDraw();
 
 		adapter->DrawTriangle();
+
+		adapter->DrawSprite();
 
 		adapter->PostDraw();
 	}
