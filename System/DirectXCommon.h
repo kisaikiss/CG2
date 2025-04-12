@@ -61,6 +61,7 @@ private:
 	//ディスクリプタヒープの生成
 	ID3D12DescriptorHeap* rtvDescriptorHeap_ = nullptr;
 	ID3D12DescriptorHeap* srvDescriptorHeap_ = nullptr;
+	ID3D12DescriptorHeap* dsvDescriptorHeap_ = nullptr;
 	// スワップチェーンを生成する
 	DXGI_SWAP_CHAIN_DESC1 swapChainDesc_{};
 	IDXGISwapChain4* swapChain_ = nullptr;
@@ -86,6 +87,8 @@ private:
 	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGpu_{};
 
 	ID3D12Resource* intermediateResource_ = nullptr;
+
+	ID3D12Resource* depthStencilResource_ = nullptr;
 
 	//バックバッファの大きさ
 	int32_t backBufferWidth_ = 0;
@@ -117,6 +120,11 @@ private:
 	void CreateShaderResourceView();
 
 	/// <summary>
+	/// DSVの生成
+	/// </summary>
+	void CreateDepthStencilView();
+
+	/// <summary>
 	/// ImGui初期化
 	/// </summary>
 	void InitializeImGui();
@@ -135,6 +143,8 @@ private:
 /// <param name="sizeInBytes"></param>
 /// <returns></returns>
 ID3D12Resource* CreateBufferResource(ID3D12Device* device, size_t sizeInBytes);
+
+ID3D12Resource* CreateDepthStencilTextureResource(ID3D12Device* device, int32_t width, int32_t height);
 
 [[nodiscard]]
 ID3D12Resource* UploadTextureData(ID3D12Resource* texture, const DirectX::ScratchImage& mipImages, ID3D12Device* device, ID3D12GraphicsCommandList* commandList);

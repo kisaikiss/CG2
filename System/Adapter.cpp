@@ -16,7 +16,7 @@ IDxcBlob* CompileShader(
 #pragma region 1.hlslファイルを読む
 	//hlslファイルの内容ををDXCの機能を利用して読み、コンパイラに渡すための設定を行う
 	//これからシェーダーをコンパイルする旨をログに出す
-	Log(ConvertString(std::format(L"Begin CompileShader, path:{}, profile:{}\n", filePath, profile)));
+	Logger::Log(ConvertString(std::format(L"Begin CompileShader, path:{}, profile:{}\n", filePath, profile)));
 	//hlslファイルを読む
 	IDxcBlobEncoding* shaderSource = nullptr;
 	HRESULT hr = dxcUtils->LoadFile(filePath.c_str(), nullptr, &shaderSource);
@@ -58,7 +58,7 @@ IDxcBlob* CompileShader(
 	IDxcBlobUtf8* shaderError = nullptr;
 	shaderResult->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(&shaderError), nullptr);
 	if (shaderError != nullptr && shaderError->GetStringLength() != 0) {
-		Log(shaderError->GetStringPointer());
+		Logger::Log(shaderError->GetStringPointer());
 		//警告・エラー駄目絶対
 		assert(false);
 	}
@@ -71,7 +71,7 @@ IDxcBlob* CompileShader(
 	hr = shaderResult->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(&shaderBlob), nullptr);
 	assert(SUCCEEDED(hr));
 	//成功したログを出す
-	Log(ConvertString(std::format(L"Compile Succeeded, path:{}, profile:{}\n", filePath, profile)));
+	Logger::Log(ConvertString(std::format(L"Compile Succeeded, path:{}, profile:{}\n", filePath, profile)));
 	//もう使わないリソースを解放
 	shaderSource->Release();
 	shaderResult->Release();
@@ -177,7 +177,7 @@ void Adapter::CreatePSO() {
 	HRESULT hr = D3D12SerializeRootSignature(&descriptionRootSignature,
 		D3D_ROOT_SIGNATURE_VERSION_1, &signatureBlob_, &errorBlob_);
 	if (FAILED(hr)) {
-		Log(reinterpret_cast<char*>(errorBlob_->GetBufferPointer()));
+		Logger::Log(reinterpret_cast<char*>(errorBlob_->GetBufferPointer()));
 		assert(false);
 	}
 	// バイナリを元に生成
@@ -220,6 +220,15 @@ void Adapter::CreatePSO() {
 	pixelShaderBlob_ = CompileShader(L"Object3d.PS.hlsl", L"ps_6_0", dxcUtils_, dxcCompiler_, includeHandler_);
 	assert(pixelShaderBlob_ != nullptr);
 
+	//DepthStencilStateの設定を行う
+	D3D12_DEPTH_STENCIL_DESC depthStencilDesc{};
+	//Depthの機能を有効化する
+	depthStencilDesc.DepthEnable = true;
+	//書き込みします
+	depthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+	//比較関数を指定。近ければ描画されるようにする
+	depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
+
 	//PSO(Pipeline State Object)を生成する
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC graphicsPipelineStateDesc{};
 	graphicsPipelineStateDesc.pRootSignature = rootSignature_; // RootSignature
@@ -228,6 +237,9 @@ void Adapter::CreatePSO() {
 	graphicsPipelineStateDesc.PS = { pixelShaderBlob_->GetBufferPointer(), pixelShaderBlob_->GetBufferSize() }; // PixelShader
 	graphicsPipelineStateDesc.BlendState = blendDesc; // BlendState
 	graphicsPipelineStateDesc.RasterizerState = rasterizerDesc; // RasterizerState
+	//DepthStencilの設定
+	graphicsPipelineStateDesc.DepthStencilState = depthStencilDesc;
+	graphicsPipelineStateDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 	// 書き込みRTVの情報
 	graphicsPipelineStateDesc.NumRenderTargets = 1;
 	graphicsPipelineStateDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
@@ -252,7 +264,7 @@ void Adapter::CreateTriangleResource() {
 	// 頂点バッファビューを作成
 	//リソースの先頭のアドレスから使う
 	vertexBufferView_.BufferLocation = vertexResource_->GetGPUVirtualAddress();
-	//使用するリソースのサイズは頂点3つ分のサイズ
+	//使用するリソースのサイズは頂点6つ分のサイズ
 	vertexBufferView_.SizeInBytes = sizeof(VertexData) * 6;
 	//1頂点あたりのサイズ
 	vertexBufferView_.StrideInBytes = sizeof(VertexData);
@@ -273,13 +285,13 @@ void Adapter::CreateTriangleResource() {
 
 	// 左下2
 	vertexData[3].position = { -0.5f,-0.5f,0.5f,1.0f };
-	vertexData[3].texcoord = { 0.f,1.f };
+	vertexData[3].texcoord = { 0.0f,1.0f };
 	// 上2
 	vertexData[4].position = { 0.0f,0.0f,0.0f,1.0f };
-	vertexData[4].texcoord = { 0.5f,0.f };
+	vertexData[4].texcoord = { 0.5f,0.0f };
 	// 右下2
 	vertexData[5].position = { 0.5f,-0.5f,-0.5f,1.0f };
-	vertexData[5].texcoord = { 1.f,1.f };
+	vertexData[5].texcoord = { 1.0f,1.0f };
 
 	//WVP用のリソースを作る。Matrix4x4 1つ分のサイズを用意する
 	wvpResource_ = CreateBufferResource(directXCommon_->GetDevice(), sizeof(Matrix4x4));
