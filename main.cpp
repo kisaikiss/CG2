@@ -1,13 +1,13 @@
 #include <dxgidebug.h>
 
 #include "Adapter.h"
+#include "Log.h"
 
 //Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
-
 	//COM初期化
 	CoInitializeEx(0, COINIT_MULTITHREADED);
-
+	Logger::LogInit();
 	Adapter* adapter = new Adapter();
 	adapter->Initialize();
 

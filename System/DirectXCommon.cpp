@@ -8,6 +8,8 @@
 #pragma comment(lib,"dxgi.lib")
 #pragma comment(lib,"dxguid.lib")
 
+#include "../Log.h"
+
 ID3D12DescriptorHeap* CreateDescriptorHeap(
 	ID3D12Device* device, D3D12_DESCRIPTOR_HEAP_TYPE heapType, UINT numDescriptors, bool shaderVisible)
 {
@@ -100,6 +102,41 @@ ID3D12Resource* CreateTextureResource(ID3D12Device* device, const DirectX::TexMe
 #pragma endregion
 }
 
+ID3D12Resource* CreateDepthStencilTextureResource(ID3D12Device* device, int32_t width, int32_t height) {
+	//生成するリソースの設定
+	D3D12_RESOURCE_DESC resourceDesc{};
+	resourceDesc.Width = width;//テクスチャの幅
+	resourceDesc.Height = height;//テクスチャの高さ
+	resourceDesc.MipLevels = 1;//mipmapの数
+	resourceDesc.DepthOrArraySize = 1;//奥行き or 配列Textureの配列数
+	resourceDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;//DepthStencilとして利用可能なフォーマット
+	resourceDesc.SampleDesc.Count = 1;//サンプリングカウント。1固定
+	resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;//二次元
+	resourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;//DepthStencilとして使う通知
+
+	//利用するHeapの設定
+	D3D12_HEAP_PROPERTIES heapProperties{};
+	heapProperties.Type = D3D12_HEAP_TYPE_DEFAULT;//VRAM上に作る
+
+	//深度値のクリア設定
+	D3D12_CLEAR_VALUE depthClearValue{};
+	depthClearValue.DepthStencil.Depth = 1.0f;//1.0f(最大値)でクリア
+	depthClearValue.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;//フォーマット。リソースと合わせる
+
+	//Resourceの生成
+	ID3D12Resource* resource = nullptr;
+	HRESULT hr = device->CreateCommittedResource(
+		&heapProperties,
+		D3D12_HEAP_FLAG_NONE,
+		&resourceDesc,
+		D3D12_RESOURCE_STATE_DEPTH_WRITE,
+		&depthClearValue,
+		IID_PPV_ARGS(&resource)
+	);
+	assert(SUCCEEDED(hr));
+	return resource;
+}
+
 [[nodiscard]]
 ID3D12Resource* UploadTextureData(ID3D12Resource* texture, const DirectX::ScratchImage& mipImages, ID3D12Device* device, ID3D12GraphicsCommandList* commandList)
 {
@@ -124,8 +161,12 @@ DirectXCommon::~DirectXCommon() {
 	// Handleとリソースを解放する
 	CloseHandle(fenceEvent_);
 	fence_->Release();
+	depthStencilResource_->Release();
+	textureResource_->Release();
+	intermediateResource_->Release();
 	srvDescriptorHeap_->Release();
 	rtvDescriptorHeap_->Release();
+	dsvDescriptorHeap_->Release();
 	swapChainResources_[0]->Release();
 	swapChainResources_[1]->Release();
 	swapChain_->Release();
@@ -141,8 +182,7 @@ DirectXCommon::~DirectXCommon() {
 #ifdef _DEBUG
 	debugController_->Release();
 #endif
-	textureResource_->Release();
-	intermediateResource_->Release();
+	
 	//リソースリークチェック
 	IDXGIDebug1* debug;
 	if (SUCCEEDED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&debug)))) {
@@ -177,6 +217,8 @@ void DirectXCommon::Initialize(WinApp* winApp, int32_t backBufferWidth, int32_t 
 
 	//シェーダリソースビューを生成
 	CreateShaderResourceView();
+
+	CreateDepthStencilView();
 	
 	//Imgui初期化
 	InitializeImGui();
@@ -204,11 +246,14 @@ void DirectXCommon::PreDraw() {
 	barrier_.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
 	// TransitionBarrierを張る
 	commandList_->ResourceBarrier(1, &barrier_);
-	// 描画先のRTVを設定する
-	commandList_->OMSetRenderTargets(1, &rtvHandles_[backBufferIndex], false, nullptr);
+	// 描画先のRTVとDSVを設定する
+	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = dsvDescriptorHeap_->GetCPUDescriptorHandleForHeapStart();
+	commandList_->OMSetRenderTargets(1, &rtvHandles_[backBufferIndex], false, &dsvHandle);
 	// 指定した色で画面全体をクリアする
 	float clearColor[] = { 0.1f, 0.25f, 0.5f, 1.0f };  // 青っぽい色。RGBAの順
 	commandList_->ClearRenderTargetView(rtvHandles_[backBufferIndex], clearColor, 0, nullptr);
+	//指定した深度で画面全体をクリアする
+	commandList_->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 	//ImGuiのために描画用DescriptorHeapを設定
 	ID3D12DescriptorHeap* descriptorHeaps[] = { srvDescriptorHeap_ };
 	commandList_->SetDescriptorHeaps(1, descriptorHeaps);
@@ -288,7 +333,7 @@ void DirectXCommon::InitializeDXGIDevice() {
 		// ソフトウェアアダプタは除外
 		if (!(adapterDesc.Flags & DXGI_ADAPTER_FLAG3_SOFTWARE)) {
 			// 利用したアダプタの情報をコンソールに出力。wstringのままだと注意
-			Log(ConvertString(std::format(L"Use Adapter: {}\n", adapterDesc.Description)));
+			Logger::Log(ConvertString(std::format(L"Use Adapter: {}\n", adapterDesc.Description)));
 			break;
 		}
 		useAdapter_ = nullptr; // ソフトウェアアダプタの場合は見なかったことにする
@@ -308,13 +353,13 @@ void DirectXCommon::InitializeDXGIDevice() {
 		// 選定した機能レベルでデバイスが生成できたかを確認
 		if (SUCCEEDED(hr_)) {
 			// 生成できたときにログ出力を行ってループを抜ける
-			Log(std::format("FeatureLevel : {}\n", featureLevelStrings[i]));
+			Logger::Log(std::format("FeatureLevel : {}\n", featureLevelStrings[i]));
 			break;
 		}
 	}
 	// デバイスの生成がうまくいかなかったので起動できない
 	assert(device_ != nullptr);
-	Log("Complete create D3D12Device!!!\n");// 初期化完了のログをだす
+	Logger::Log("Complete create D3D12Device!!!\n");// 初期化完了のログをだす
 
 #ifdef _DEBUG
 	ID3D12InfoQueue* infoQueue = nullptr;
@@ -438,6 +483,21 @@ void DirectXCommon::CreateShaderResourceView() {
 	textureSrvHandleGpu_.ptr += device_->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 	//SRVの生成
 	device_->CreateShaderResourceView(textureResource_, &srvDesc, textureSrvHandleCpu);
+}
+
+void DirectXCommon::CreateDepthStencilView() {
+	depthStencilResource_ = CreateDepthStencilTextureResource(device_, winApp_->kWindowWidth, winApp_->kWindowHeight);
+	
+	//DSV用のヒープでディスクリプタの数は1、DSVはシェーダ内で触るものではないのでShaderVisibleはflase
+	dsvDescriptorHeap_ = CreateDescriptorHeap(device_, D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1, false);
+
+	//DSVの設定
+	D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc{};
+	dsvDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;//Format。基本的にはResourceに合わせる
+	dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;//2dTexture
+	//DSVHeapの先頭にDSVを作る
+	device_->CreateDepthStencilView(depthStencilResource_, &dsvDesc, dsvDescriptorHeap_->GetCPUDescriptorHandleForHeapStart());
+
 }
 
 void DirectXCommon::InitializeImGui() {
