@@ -11,9 +11,10 @@
 #include "Transform.h"
 #include "Matrix4x4.h"
 
+
 #pragma comment(lib,"dxcompiler.lib")
 
-class Adapter {
+class Engine {
 public:
 	//クライアント領域(ゲーム画面)のサイズ
 	static const int32_t kClientWidth = 1280;
@@ -37,6 +38,21 @@ public:
 	void PostDraw();
 
 	void FrameStart();
+
+	/// <summary>
+	/// デバイスの取得
+	/// </summary>
+	/// <returns>デバイス</returns>
+	ID3D12Device* GetDevice() const { return directXCommon_->GetDevice(); }
+
+	/// <summary>
+	/// 描画コマンドリストの取得
+	/// </summary>
+	/// <returns>描画コマンドリスト</returns>
+	ID3D12GraphicsCommandList* GetCommandList() const { return directXCommon_->GetCommandList(); }
+
+	Transforms GetCameraTransforms() const { return cameraTransform_; }
+	Matrix4x4 GetProjectionMatrix()const { return projectionMatrix_; }
 private:
 	std::shared_ptr<WinApp> winApp_;
 	std::shared_ptr<DirectXCommon> directXCommon_;
