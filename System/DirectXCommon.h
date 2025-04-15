@@ -135,16 +135,3 @@ private:
 	void CreateFence();
 
 };
-
-/// <summary>
-/// Resource作成関数
-/// </summary>
-/// <param name="device"></param>
-/// <param name="sizeInBytes"></param>
-/// <returns></returns>
-ID3D12Resource* CreateBufferResource(ID3D12Device* device, size_t sizeInBytes);
-
-ID3D12Resource* CreateDepthStencilTextureResource(ID3D12Device* device, int32_t width, int32_t height);
-
-[[nodiscard]]
-ID3D12Resource* UploadTextureData(ID3D12Resource* texture, const DirectX::ScratchImage& mipImages, ID3D12Device* device, ID3D12GraphicsCommandList* commandList);

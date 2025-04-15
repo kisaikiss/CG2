@@ -1,5 +1,5 @@
-#include "Adapter.h"
-
+#include "Engine.h"
+#include "DirectXUtils.h"
 #include "MatrixCalculations.h"
 #include "VertexData.h"
 
@@ -81,7 +81,7 @@ IDxcBlob* CompileShader(
 
 }
 
-void Adapter::Initialize() {
+void Engine::Initialize() {
 	winApp_ = std::make_shared<WinApp>();
 	winApp_->Create(L"CG2", L"CG2WindowClass", kClientWidth, kClientHeight);
 
@@ -97,7 +97,7 @@ void Adapter::Initialize() {
 	CreateSpriteResource();
 }
 
-void Adapter::Finalize() {
+void Engine::Finalize() {
 	vertexResourceSprite_->Release();
 	transformationMatrixReourceSprite_->Release();
 	materialResource_->Release();
@@ -118,7 +118,7 @@ void Adapter::Finalize() {
 	winApp_.reset();
 }
 
-void Adapter::InitializeDirectXCompiler() {
+void Engine::InitializeDirectXCompiler() {
 	if (!directXCommon_ || !winApp_) {
 		return;
 	}
@@ -135,7 +135,7 @@ void Adapter::InitializeDirectXCompiler() {
 	assert(SUCCEEDED(hr));
 }
 
-void Adapter::CreatePSO() {
+void Engine::CreatePSO() {
 	// RootSignature(ShaderとResourceをどのように関連付けるか示したオブジェクト)の作成
 	D3D12_ROOT_SIGNATURE_DESC descriptionRootSignature{};
 	descriptionRootSignature.Flags =
@@ -258,7 +258,7 @@ void Adapter::CreatePSO() {
 
 }
 
-void Adapter::CreateTriangleResource() {
+void Engine::CreateTriangleResource() {
 
 
 	//頂点リソースを作る
@@ -313,7 +313,7 @@ void Adapter::CreateTriangleResource() {
 	//マテリアルにデータを書き込む
 	//書き込むためのアドレスを取得
 	materialResource_->Map(0, nullptr, reinterpret_cast<void**>(&materialData_));
-	//今回は赤を書き込んでみる
+	//今回は白を書き込んでみる
 	*materialData_ = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 
 	// ビューポート
@@ -333,7 +333,7 @@ void Adapter::CreateTriangleResource() {
 	scissorRect_.bottom = kClientHeight;
 }
 
-void Adapter::CreateSpriteResource() {
+void Engine::CreateSpriteResource() {
 	//頂点リソースを作る
 	vertexResourceSprite_ = CreateBufferResource(directXCommon_->GetDevice(), sizeof(VertexData) * 6);
 
@@ -384,11 +384,11 @@ void Adapter::CreateSpriteResource() {
 	};
 }
 
-bool Adapter::ProcessMessage() {
+bool Engine::ProcessMessage() {
 	return winApp_->ProcessMessage();
 }
 
-void Adapter::UpdateTriangle() {
+void Engine::UpdateTriangle() {
 	ImGui::Begin("triangle");
 	ImGui::DragFloat3("position", &transform_.translate.x, 0.01f);
 	ImGui::DragFloat3("rotate", &transform_.rotate.x, 0.01f);
@@ -397,7 +397,7 @@ void Adapter::UpdateTriangle() {
 	ImGui::End();
 }
 
-void Adapter::UpdateSprite() {
+void Engine::UpdateSprite() {
 	ImGui::Begin("sprite");
 	ImGui::DragFloat3("position", &transformSprite.translate.x, 1.0f);
 	ImGui::DragFloat3("rotate", &transformSprite.rotate.x, 0.01f);
@@ -406,7 +406,7 @@ void Adapter::UpdateSprite() {
 	ImGui::End();
 }
 
-void Adapter::DrawTriangle() {
+void Engine::DrawTriangle() {
 	directXCommon_->GetCommandList()->RSSetViewports(1, &viewport_);	//viewportを設定
 	directXCommon_->GetCommandList()->RSSetScissorRects(1, &scissorRect_);//Scirssorを設定
 	//RootSignatureを設定。PSOに設定しているけど別途設定が必要
@@ -434,7 +434,7 @@ void Adapter::DrawTriangle() {
 	directXCommon_->GetCommandList()->DrawInstanced(6, 1, 0, 0);
 }
 
-void Adapter::DrawSprite() {
+void Engine::DrawSprite() {
 	directXCommon_->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferViewSprite_);//VBVを設定
 	//Sprite用のWorldViewProjectionMatrixを作る
 	Matrix4x4 worldMatrix = MakeAffineMatrix(transformSprite.scale, transformSprite.rotate, transformSprite.translate);
@@ -448,17 +448,17 @@ void Adapter::DrawSprite() {
 	directXCommon_->GetCommandList()->DrawInstanced(6, 1, 0, 0);
 }
 
-void Adapter::PreDraw() {
+void Engine::PreDraw() {
 	if(directXCommon_)
 	directXCommon_->PreDraw();
 }
 
-void Adapter::PostDraw() {
+void Engine::PostDraw() {
 	if (directXCommon_)
 	directXCommon_->PostDraw();
 }
 
-void Adapter::FrameStart() {
+void Engine::FrameStart() {
 	if (directXCommon_) {
 		directXCommon_->ImGuiNewFrame();
 	}

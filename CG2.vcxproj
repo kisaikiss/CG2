@@ -60,7 +60,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <AdditionalIncludeDirectories>$(ProjectDir);Math;System;externals\imgui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);Math;System;externals\imgui;Shape;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -84,7 +84,7 @@ copy "$(windowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(ProjectDir);Math;System;externals\imgui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);Math;System;externals\imgui;Shape;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -110,8 +110,11 @@ copy "$(windowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Math\MatrixCalculations.cpp" />
     <ClCompile Include="Math\Vector3.cpp" />
-    <ClCompile Include="System\Adapter.cpp" />
+    <ClCompile Include="Shape\Sphere.cpp" />
+    <ClCompile Include="System\Camera.cpp" />
+    <ClCompile Include="System\Engine.cpp" />
     <ClCompile Include="System\DirectXCommon.cpp" />
+    <ClCompile Include="System\DirectXUtils.cpp" />
     <ClCompile Include="System\WinApp.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -131,8 +134,11 @@ copy "$(windowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="Math\Vector2.h" />
     <ClInclude Include="Math\Vector3.h" />
     <ClInclude Include="Math\VertexData.h" />
-    <ClInclude Include="System\Adapter.h" />
+    <ClInclude Include="Shape\Sphere.h" />
+    <ClInclude Include="System\Camera.h" />
+    <ClInclude Include="System\Engine.h" />
     <ClInclude Include="System\DirectXCommon.h" />
+    <ClInclude Include="System\DirectXUtils.h" />
     <ClInclude Include="System\WinApp.h" />
     <ClInclude Include="Vector4.h" />
   </ItemGroup>
