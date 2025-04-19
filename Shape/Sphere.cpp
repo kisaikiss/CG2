@@ -16,15 +16,16 @@ int32_t Sphere::sphereNum = 1;
 
 Sphere::~Sphere() {
 	vertexResource_->Release();
-	wvpResource_->Release();
+	transformationResource_->Release();
 	materialResource_->Release();
 }
 
-void Sphere::Initialize(ID3D12Device* device, ID3D12GraphicsCommandList* commandList) {
+void Sphere::Initialize(ID3D12Device* device, ID3D12GraphicsCommandList* commandList, TextureSystem* textureSystem) {
 	myNumber_ = sphereNum;
 	sphereNum++;
 	commandList_ = commandList;
 	device_ = device;
+	textureSystem_ = textureSystem;
 	numberOfVertex_ = kSubdivision * kSubdivision * 6;
 	vertexResource_ = CreateBufferResource(device, sizeof(VertexData) * numberOfVertex_);
 	//リソースの先頭のアドレスから使う
@@ -34,23 +35,29 @@ void Sphere::Initialize(ID3D12Device* device, ID3D12GraphicsCommandList* command
 	//1頂点あたりのサイズ
 	vertexBufferView_.StrideInBytes = sizeof(VertexData);
 	vertexResource_->Map(0, nullptr, reinterpret_cast<void**>(&vertexData_));
-	//WVP用のリソースを作る。Matrix4x4 1つ分のサイズを用意する
-	wvpResource_ = CreateBufferResource(device_, sizeof(Matrix4x4));
+	//transformation用のリソースを作る。TransformationMatrix 1つ分のサイズを用意する
+	transformationResource_ = CreateBufferResource(device_, sizeof(TransformationMatrix));
 	//データを書き込む
 	//書き込むためのアドレスを取得
-	wvpResource_->Map(0, nullptr, reinterpret_cast<void**>(&wvpData_));
+	transformationResource_->Map(0, nullptr, reinterpret_cast<void**>(&transformationData_));
 	//単位行列を書き込んでおく
-	*wvpData_ = MakeIdentity4x4();
+	transformationData_->WVP = MakeIdentity4x4();
+	transformationData_->World = MakeIdentity4x4();
 	//トランスフォーム
 	transform_.scale = { 1.f,1.f,1.f };
 	transform_.translate = {0.f,0.f,0.9f};
 	// マテリアル用のリソースを作る。今回はcolor一つ分のサイズを用意
-	materialResource_ = CreateBufferResource(device_, sizeof(Vector4));
+	materialResource_ = CreateBufferResource(device_, sizeof(MaterialData));
 	//マテリアルにデータを書き込む
 	//書き込むためのアドレスを取得
 	materialResource_->Map(0, nullptr, reinterpret_cast<void**>(&materialData_));
 	//今回は白を書き込んでみる
-	*materialData_ = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+	materialData_->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+	//Lightingを有効にする
+	materialData_->enableLighting = true;
+	//テクスチャ読み込み
+	uvChackTextureNum_ = textureSystem_->Lord("resources/uvChecker.png");
+	monsterBallTextureNum_ = textureSystem_->Lord("resources/monsterBall.png");
 }
 
 void Sphere::Update() {
@@ -62,7 +69,8 @@ void Sphere::Update() {
 	ImGui::DragFloat3("position", &transform_.translate.x, 0.01f);
 	ImGui::DragFloat3("rotate", &transform_.rotate.x, 0.01f);
 	ImGui::DragFloat3("scale", &transform_.scale.x, 0.01f);
-	ImGui::ColorEdit3("color", &materialData_->x);
+	ImGui::ColorEdit3("color", &materialData_->color.x);
+	ImGui::Checkbox("useMonsterBall", &useMonsterBall_);
 	ImGui::End();
 
 	const float pi = std::numbers::pi_v<float>;
@@ -99,6 +107,9 @@ void Sphere::Update() {
 			a.texcoord = {
 				u, v
 			};
+			a.normal.x = a.position.x;
+			a.normal.y = a.position.y;
+			a.normal.z = a.position.z;
 
 			b.position = {
 				std::cos(latNext) * std::cos(lon),
@@ -109,6 +120,9 @@ void Sphere::Update() {
 			b.texcoord = {
 				u, vNext
 			};
+			b.normal.x = b.position.x;
+			b.normal.y = b.position.y;
+			b.normal.z = b.position.z;
 
 			c.position = {
 				std::cos(lat) * std::cos(lonNext),
@@ -119,6 +133,9 @@ void Sphere::Update() {
 			c.texcoord = {
 				uNext, v
 			};
+			c.normal.x = c.position.x;
+			c.normal.y = c.position.y;
+			c.normal.z = c.position.z;
 
 			d.position = {
 				std::cos(latNext) * std::cos(lonNext),
@@ -129,6 +146,9 @@ void Sphere::Update() {
 			d.texcoord = {
 				uNext, vNext
 			};
+			d.normal.x = d.position.x;
+			d.normal.y = d.position.y;
+			d.normal.z = d.position.z;
 
 			vertexData_[start] = a;
 			vertexData_[start + 1] = b;
@@ -143,11 +163,13 @@ void Sphere::Update() {
 void Sphere::Draw(const Camera& camera) {
 	Matrix4x4 worldMatrix = MakeAffineMatrix(transform_.scale, transform_.rotate, transform_.translate);
 	Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, camera.GetVeiwProjectionMatrix());
-	*wvpData_ = worldViewProjectionMatrix;
+	transformationData_->WVP = worldViewProjectionMatrix;
+	transformationData_->World = worldMatrix;
 	commandList_->IASetVertexBuffers(0, 1, &vertexBufferView_);//VBVを設定
 	//wvp用CBufferの場所を指定
-	commandList_->SetGraphicsRootConstantBufferView(1, wvpResource_->GetGPUVirtualAddress());
+	commandList_->SetGraphicsRootConstantBufferView(1, transformationResource_->GetGPUVirtualAddress());
 	commandList_->SetGraphicsRootConstantBufferView(0, materialResource_->GetGPUVirtualAddress());
+	commandList_->SetGraphicsRootDescriptorTable(2, useMonsterBall_ ? textureSystem_->GetTextureSrvHandleGpu(monsterBallTextureNum_) : textureSystem_->GetTextureSrvHandleGpu(uvChackTextureNum_));
 	commandList_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	commandList_->DrawInstanced(numberOfVertex_, 1, 0, 0);
 }

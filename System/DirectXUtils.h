@@ -25,5 +25,23 @@ ID3D12Resource* CreateTextureResource(ID3D12Device* device, const DirectX::TexMe
 
 ID3D12Resource* CreateDepthStencilTextureResource(ID3D12Device* device, int32_t width, int32_t height);
 
+/// <summary>
+/// 特定インデックスのDescriptorHandleを取得する
+/// </summary>
+/// <param name="descriptorHeap"></param>
+/// <param name="descriptorSize"></param>
+/// <param name="index"></param>
+/// <returns></returns>
+D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandle(ID3D12DescriptorHeap* descriptorHeap, uint32_t descriptorSize, uint32_t index);
+
+/// <summary>
+/// 特定インデックスのDescriptorHandleを取得する
+/// </summary>
+/// <param name="descriptorHeap"></param>
+/// <param name="descriptorSize"></param>
+/// <param name="index"></param>
+/// <returns></returns>
+D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(ID3D12DescriptorHeap* descriptorHeap, uint32_t descriptorSize, uint32_t index);
+
 [[nodiscard]]
 ID3D12Resource* UploadTextureData(ID3D12Resource* texture, const DirectX::ScratchImage& mipImages, ID3D12Device* device, ID3D12GraphicsCommandList* commandList);

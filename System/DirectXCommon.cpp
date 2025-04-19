@@ -14,8 +14,7 @@ DirectXCommon::~DirectXCommon() {
 	CloseHandle(fenceEvent_);
 	fence_->Release();
 	depthStencilResource_->Release();
-	textureResource_->Release();
-	intermediateResource_->Release();
+	textureSystem_->Finalize();
 	srvDescriptorHeap_->Release();
 	rtvDescriptorHeap_->Release();
 	dsvDescriptorHeap_->Release();
@@ -58,6 +57,10 @@ void DirectXCommon::Initialize(WinApp* winApp, int32_t backBufferWidth, int32_t 
 	//デバイス生成
 	InitializeDXGIDevice();
 
+	descriptorSizeSRV_ = device_->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	descriptorSizeRTV_ = device_->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+	descriptorSizeDSV_ = device_->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+
 	//コマンドキュー、コマンドリストの生成
 	InitializeCommand();
 
@@ -67,8 +70,8 @@ void DirectXCommon::Initialize(WinApp* winApp, int32_t backBufferWidth, int32_t 
 	//レンダーターゲットの生成
 	CreateFinalRenderTargets();
 
-	//シェーダリソースビューを生成
-	CreateShaderResourceView();
+	//テクスチャのシステムを初期化
+	InitializeTextureSystem();
 
 	CreateDepthStencilView();
 	
@@ -77,6 +80,7 @@ void DirectXCommon::Initialize(WinApp* winApp, int32_t backBufferWidth, int32_t 
 
 	//フェンスの生成
 	CreateFence();
+
 }
 
 void DirectXCommon::PreDraw() {
@@ -310,31 +314,14 @@ void DirectXCommon::CreateFinalRenderTargets() {
 	device_->CreateRenderTargetView(swapChainResources_[1], &rtvDesc_, rtvHandles_[1]);
 }
 
-void DirectXCommon::CreateShaderResourceView() {
+void DirectXCommon::InitializeTextureSystem() {
 	//srvディスクリプタヒープ生成、srvはshader内で触るのでtrue
 	srvDescriptorHeap_ = CreateDescriptorHeap(device_, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 128, true);
-	//テクスチャを読んで転送する
-	mipImages_ = LordTexture("resources/uvChecker.png");
-	const DirectX::TexMetadata metadata = mipImages_.GetMetadata();
-	textureResource_ = CreateTextureResource(device_, metadata);
-	//UploadTextureData(textureResource_, mipImages);
-	intermediateResource_ = UploadTextureData(textureResource_, mipImages_, device_, commandList_);
 
-	//メタデータを基にSRVの設定
-	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
-	srvDesc.Format = metadata.format;
-	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-	srvDesc.Texture2D.MipLevels = UINT(metadata.mipLevels);
-
-	//SRVを作成するディスクリプタヒープの場所を決める
-	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCpu = srvDescriptorHeap_->GetCPUDescriptorHandleForHeapStart();
-	textureSrvHandleGpu_ = srvDescriptorHeap_->GetGPUDescriptorHandleForHeapStart();
-	//先頭はImGuiが使うのでその次を使う
-	textureSrvHandleCpu.ptr += device_->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-	textureSrvHandleGpu_.ptr += device_->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-	//SRVの生成
-	device_->CreateShaderResourceView(textureResource_, &srvDesc, textureSrvHandleCpu);
+	textureSystem_ = new TextureSystem();
+	textureSystem_->Initialize(device_, commandList_, srvDescriptorHeap_);
+	textureSystem_->Lord("resources/uvChecker.png");
+	textureSystem_->Lord("resources/monsterBall.png");
 }
 
 void DirectXCommon::CreateDepthStencilView() {

@@ -5,6 +5,7 @@
 #include <cassert>
 #include <format>
 #include <dxgidebug.h>
+#include "TextureSystem.h"
 
 #include "externals/DirectXTex/DirectXTex.h"
 #include <externals/DirectXTex/d3dx12.h>
@@ -40,8 +41,11 @@ public:
 	/// <returns>描画コマンドリスト</returns>
 	ID3D12GraphicsCommandList* GetCommandList() const { return commandList_; }
 
-
-	D3D12_GPU_DESCRIPTOR_HANDLE GetTextureSrvHandleGpu() const { return textureSrvHandleGpu_; }
+	/// <summary>
+	/// テクスチャのシステムを取得
+	/// </summary>
+	/// <returns></returns>
+	TextureSystem* GetTextureSystem() const { return textureSystem_; }
 
 private:
 	WinApp* winApp_ = nullptr;
@@ -79,16 +83,15 @@ private:
 	// TransitionBarrierの設定
 	D3D12_RESOURCE_BARRIER barrier_{};
 
-	//テクスチャリソース
-	ID3D12Resource* textureResource_ = nullptr;
-	//mip
-	DirectX::ScratchImage mipImages_{};
-
-	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGpu_{};
-
-	ID3D12Resource* intermediateResource_ = nullptr;
-
 	ID3D12Resource* depthStencilResource_ = nullptr;
+
+	//テクスチャのシステム
+	TextureSystem* textureSystem_ = nullptr;
+
+	//ディスクリプタのサイズ
+	uint32_t descriptorSizeSRV_{};
+	uint32_t descriptorSizeRTV_{};
+	uint32_t descriptorSizeDSV_{};
 
 	//バックバッファの大きさ
 	int32_t backBufferWidth_ = 0;
@@ -115,9 +118,9 @@ private:
 	void CreateFinalRenderTargets();
 
 	/// <summary>
-	/// シェーダリソースビューを生成
+	/// テクスチャのシステムを初期化
 	/// </summary>
-	void CreateShaderResourceView();
+	void InitializeTextureSystem();
 
 	/// <summary>
 	/// DSVの生成

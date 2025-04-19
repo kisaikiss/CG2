@@ -5,6 +5,7 @@
 #include "Engine.h"
 #include "Log.h"
 #include "Sphere.h"
+#include "Triangle.h"
 #include "Camera.h"
 
 #pragma comment(lib,"Dbghelp.lib")
@@ -41,12 +42,24 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	CoInitializeEx(0, COINIT_MULTITHREADED);
 	Logger::LogInit();
 	Sphere* sphere = new Sphere();
-	Sphere* sphere2 = new Sphere();
+	//Sphere* sphere2 = new Sphere();
+	Triangle* triangle1 = new Triangle();
+	Triangle* triangle2 = new Triangle();
 	Camera* camera = new Camera();
 	Engine* engine = new Engine();
+
 	engine->Initialize();
-	sphere->Initialize(engine->GetDevice(), engine->GetCommandList());
-	sphere2->Initialize(engine->GetDevice(), engine->GetCommandList());
+	sphere->Initialize(engine->GetDevice(), engine->GetCommandList(),engine->GetTextureSystem());
+	//sphere2->Initialize(engine->GetDevice(), engine->GetCommandList(), engine->GetTextureSystem());
+	triangle1->Initialize(engine->GetDevice(), engine->GetCommandList());
+	triangle2->Initialize(engine->GetDevice(), engine->GetCommandList());;
+
+	Vector3 kTriangle2Vertex[3] = {
+		{ -0.5f,-0.5f,0.5f },
+		{0.0f, 0.0f, 0.0f},
+		{0.5f,-0.5f,-0.5f}
+	};
+	triangle2->SetVertex(kTriangle2Vertex);
 
 	//ウィンドウのxボタンが押されるまでループ
 	while (engine->ProcessMessage() == 0) {
@@ -54,18 +67,22 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		engine->FrameStart();
 		//ImGui::ShowDemoWindow();
 
-		engine->UpdateTriangle();
 		engine->UpdateSprite();
 		sphere->Update();
-		sphere2->Update();
+		//sphere2->Update();
+		triangle1->Update();
+		triangle2->Update();
 		camera->Update();
+		engine->UpdateLight();
+
 
 		engine->PreDraw();
 
-		engine->DrawTriangle();
-
+		//engine->DrawTriangle();
+		triangle1->Draw(*camera);
+		triangle2->Draw(*camera);
 		sphere->Draw(*camera);
-		sphere2->Draw(*camera);
+		//sphere2->Draw(*camera);
 
 		engine->DrawSprite();
 
@@ -76,7 +93,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	OutputDebugStringA("Hello, DirectX!!\n");
 
 	delete sphere;
-	delete sphere2;
+	//delete sphere2;
+	delete triangle1;
+	delete triangle2;
 	delete camera;
 	engine->Finalize();
 	delete engine;

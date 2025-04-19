@@ -110,12 +110,15 @@ copy "$(windowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Math\MatrixCalculations.cpp" />
     <ClCompile Include="Math\Vector3.cpp" />
+    <ClCompile Include="Math\VectorCalculations.cpp" />
     <ClCompile Include="Shape\Sphere.cpp" />
+    <ClCompile Include="Shape\Triangle.cpp" />
     <ClCompile Include="System\Camera.cpp" />
     <ClCompile Include="System\Engine.cpp" />
     <ClCompile Include="System\DirectXCommon.cpp" />
     <ClCompile Include="System\DirectXUtils.cpp" />
     <ClCompile Include="System\WinApp.cpp" />
+    <ClCompile Include="TextureSystem.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ConvertString.h" />
@@ -128,18 +131,24 @@ copy "$(windowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="externals\imgui\imstb_textedit.h" />
     <ClInclude Include="externals\imgui\imstb_truetype.h" />
     <ClInclude Include="Log.h" />
+    <ClInclude Include="Math\DirectionalLight.h" />
+    <ClInclude Include="Math\MaterialData.h" />
     <ClInclude Include="Math\Matrix4x4.h" />
     <ClInclude Include="Math\MatrixCalculations.h" />
     <ClInclude Include="Math\Transform.h" />
+    <ClInclude Include="Math\TransformationMatrix.h" />
     <ClInclude Include="Math\Vector2.h" />
     <ClInclude Include="Math\Vector3.h" />
+    <ClInclude Include="Math\VectorCalculations.h" />
     <ClInclude Include="Math\VertexData.h" />
     <ClInclude Include="Shape\Sphere.h" />
+    <ClInclude Include="Shape\Triangle.h" />
     <ClInclude Include="System\Camera.h" />
     <ClInclude Include="System\Engine.h" />
     <ClInclude Include="System\DirectXCommon.h" />
     <ClInclude Include="System\DirectXUtils.h" />
     <ClInclude Include="System\WinApp.h" />
+    <ClInclude Include="TextureSystem.h" />
     <ClInclude Include="Vector4.h" />
   </ItemGroup>
   <ItemGroup>

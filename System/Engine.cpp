@@ -2,6 +2,8 @@
 #include "DirectXUtils.h"
 #include "MatrixCalculations.h"
 #include "VertexData.h"
+#include "VectorCalculations.h"
+#include <MaterialData.h>
 
 
 IDxcBlob* CompileShader(
@@ -83,10 +85,12 @@ IDxcBlob* CompileShader(
 
 void Engine::Initialize() {
 	winApp_ = std::make_shared<WinApp>();
-	winApp_->Create(L"CG2", L"CG2WindowClass", kClientWidth, kClientHeight);
+	winApp_->Create(L"LE2A_04_コバヤシ_マサト_CG2", L"CG2WindowClass", kClientWidth, kClientHeight);
 
 	directXCommon_ = std::make_shared<DirectXCommon>();
 	directXCommon_->Initialize(winApp_.get());
+
+	textureSystem_ = directXCommon_->GetTextureSystem();
 
 	InitializeDirectXCompiler();
 
@@ -99,10 +103,9 @@ void Engine::Initialize() {
 
 void Engine::Finalize() {
 	vertexResourceSprite_->Release();
+	directionalLightResource_->Release();
+	materialResourceSprite_->Release();
 	transformationMatrixReourceSprite_->Release();
-	materialResource_->Release();
-	wvpResource_->Release();
-	vertexResource_->Release();
 	graphicsPipelineState_->Release();
 	signatureBlob_->Release();
 	if (errorBlob_) {
@@ -150,8 +153,8 @@ void Engine::CreatePSO() {
 
 
 	//RootParameter(データそれぞれのBind情報)の作成
-	//複数設定できるので配列。今回は1つだけなので長さ1の配列
-	D3D12_ROOT_PARAMETER rootParameters[3] = {};
+	//複数設定できるので配列。
+	D3D12_ROOT_PARAMETER rootParameters[4] = {};
 	rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;	//CBVを使う
 	rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL; //PixelShaderで使う
 	rootParameters[0].Descriptor.ShaderRegister = 0;					//レジスタ番号0とバインド
@@ -162,6 +165,9 @@ void Engine::CreatePSO() {
 	rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 	rootParameters[2].DescriptorTable.pDescriptorRanges = descriptorRange; //テーブルの中身の配列を指定
 	rootParameters[2].DescriptorTable.NumDescriptorRanges = _countof(descriptorRange);//テーブルで利用する数
+	rootParameters[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+	rootParameters[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+	rootParameters[3].Descriptor.ShaderRegister = 1;
 	descriptionRootSignature.pParameters = rootParameters;				//ルートパラメータ配列へのポインタ
 	descriptionRootSignature.NumParameters = _countof(rootParameters);	//配列の長さ
 
@@ -192,7 +198,7 @@ void Engine::CreatePSO() {
 
 	//InputLayout(VertexShaderへ渡す頂点データがどのようなものか指定するオブジェクト)
 	//floatのVector4でPOSITION0というSemanticsというメンバ変数が定義されている
-	D3D12_INPUT_ELEMENT_DESC inputElementDescs[2] = {};
+	D3D12_INPUT_ELEMENT_DESC inputElementDescs[3] = {};
 	inputElementDescs[0].SemanticName = "POSITION";
 	inputElementDescs[0].SemanticIndex = 0;
 	inputElementDescs[0].Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
@@ -201,6 +207,10 @@ void Engine::CreatePSO() {
 	inputElementDescs[1].SemanticIndex = 0;
 	inputElementDescs[1].Format = DXGI_FORMAT_R32G32_FLOAT;
 	inputElementDescs[1].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
+	inputElementDescs[2].SemanticName = "NORMAL";
+	inputElementDescs[2].SemanticIndex = 0;
+	inputElementDescs[2].Format = DXGI_FORMAT_R32G32B32_FLOAT;
+	inputElementDescs[2].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
 	D3D12_INPUT_LAYOUT_DESC inputLayoutDesc{};
 	inputLayoutDesc.pInputElementDescs = inputElementDescs;
 	inputLayoutDesc.NumElements = _countof(inputElementDescs);
@@ -260,61 +270,13 @@ void Engine::CreatePSO() {
 
 void Engine::CreateTriangleResource() {
 
+	//光源
+	directionalLightResource_ = CreateBufferResource(directXCommon_->GetDevice(), sizeof(DirectionalLight));
+	directionalLightResource_->Map(0, nullptr, reinterpret_cast<void**>(&directionalLightData_));
 
-	//頂点リソースを作る
-	vertexResource_ = CreateBufferResource(directXCommon_->GetDevice(), sizeof(VertexData) * 6);
-
-	//VertexBufferView(ResourceをShaderへの入力頂点として処理するためのView)を作成
-	// 頂点バッファビューを作成
-	//リソースの先頭のアドレスから使う
-	vertexBufferView_.BufferLocation = vertexResource_->GetGPUVirtualAddress();
-	//使用するリソースのサイズは頂点6つ分のサイズ
-	vertexBufferView_.SizeInBytes = sizeof(VertexData) * 6;
-	//1頂点あたりのサイズ
-	vertexBufferView_.StrideInBytes = sizeof(VertexData);
-
-	//頂点リソースにデータを書き込む
-	VertexData* vertexData = nullptr;
-	//書き込むためのアドレスを取得
-	vertexResource_->Map(0, nullptr, reinterpret_cast<void**>(&vertexData));
-	// 左下
-	vertexData[0].position = { -0.5f,-0.5f,0.0f,1.0f };
-	vertexData[0].texcoord = { 0.f,1.f };
-	// 上
-	vertexData[1].position = { 0.0f,0.5f,0.0f,1.0f };
-	vertexData[1].texcoord = { 0.5f,0.f };
-	// 右下
-	vertexData[2].position = { 0.5f,-0.5f,0.0f,1.0f };
-	vertexData[2].texcoord = { 1.f,1.f };
-
-	// 左下2
-	vertexData[3].position = { -0.5f,-0.5f,0.5f,1.0f };
-	vertexData[3].texcoord = { 0.0f,1.0f };
-	// 上2
-	vertexData[4].position = { 0.0f,0.0f,0.0f,1.0f };
-	vertexData[4].texcoord = { 0.5f,0.0f };
-	// 右下2
-	vertexData[5].position = { 0.5f,-0.5f,-0.5f,1.0f };
-	vertexData[5].texcoord = { 1.0f,1.0f };
-
-	//WVP用のリソースを作る。Matrix4x4 1つ分のサイズを用意する
-	wvpResource_ = CreateBufferResource(directXCommon_->GetDevice(), sizeof(Matrix4x4));
-	//データを書き込む
-	//書き込むためのアドレスを取得
-	wvpResource_->Map(0, nullptr, reinterpret_cast<void**>(&wvpData_));
-	//単位行列を書き込んでおく
-	*wvpData_ = MakeIdentity4x4();
-
-	//透視投影行列
-	projectionMatrix_ = MakePerspectiveFovMatrix(0.45f, static_cast<float>(kClientWidth) / static_cast<float>(kClientHeight), 0.1f, 100.f);
-
-	//マテリアル用のリソースを作る。今回はcolor一つ分のサイズを用意
-	materialResource_ = CreateBufferResource(directXCommon_->GetDevice(), sizeof(Vector4));
-	//マテリアルにデータを書き込む
-	//書き込むためのアドレスを取得
-	materialResource_->Map(0, nullptr, reinterpret_cast<void**>(&materialData_));
-	//今回は白を書き込んでみる
-	*materialData_ = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+	directionalLightData_->color = { 1.0f,1.0f,1.0f,1.0f };
+	directionalLightData_->direction = { 0.0f,-1.0f,0.0f };
+	directionalLightData_->intensity = 1.0f;
 
 	// ビューポート
 	//クライアント領域のサイズと一緒にして画面全体に表示
@@ -370,31 +332,37 @@ void Engine::CreateSpriteResource() {
 	vertexData[5].position = { 640.0f,360.0f,0.0f,1.0f };
 	vertexData[5].texcoord = { 1.0f,1.0f };
 
+	for (uint32_t i = 0; i < 6; i++) {
+		vertexData[i].normal = { 0.0f,0.0f,-1.0f };
+	}
+
 	//Sprite用のTransformationMatrix用のリソースを作る。Matrix4x4一つ分のサイズを用意する
-	transformationMatrixReourceSprite_ = CreateBufferResource(directXCommon_->GetDevice(), sizeof(Matrix4x4));
+	transformationMatrixReourceSprite_ = CreateBufferResource(directXCommon_->GetDevice(), sizeof(TransformationMatrix));
 	//データを書き込むためのアドレスを取得
 	transformationMatrixReourceSprite_->Map(0, nullptr, reinterpret_cast<void**>(&transformationMatrixDataSprite_));
 	//単位行列を書き込んでおく
-	*transformationMatrixDataSprite_ = MakeIdentity4x4();
+	transformationMatrixDataSprite_->WVP = MakeIdentity4x4();
+	transformationMatrixDataSprite_->World = MakeIdentity4x4();
 	//CPUで動かす用のトランスフォーム
 	transformSprite = {
 		{1.0f,1.0f,1.0f},
 		{0.0f,0.0f,0.0f},
 		{0.0f,0.0f,0.0f}
 	};
+	// マテリアル用のリソースを作る。今回はcolor一つ分のサイズを用意
+	materialResourceSprite_ = CreateBufferResource(directXCommon_->GetDevice(), sizeof(MaterialData));
+	MaterialData* materialData;
+	//マテリアルにデータを書き込む
+	//マテリアルデータへ書き込むためのアドレスを取得
+	materialResourceSprite_->Map(0, nullptr, reinterpret_cast<void**>(&materialData));
+	//今回は白を書き込んでみる
+	materialData->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+	//Lightingを無効にする
+	materialData->enableLighting = false;
 }
 
 bool Engine::ProcessMessage() {
 	return winApp_->ProcessMessage();
-}
-
-void Engine::UpdateTriangle() {
-	ImGui::Begin("triangle");
-	ImGui::DragFloat3("position", &transform_.translate.x, 0.01f);
-	ImGui::DragFloat3("rotate", &transform_.rotate.x, 0.01f);
-	ImGui::DragFloat2("scale", &transform_.scale.x, 0.01f);
-	ImGui::ColorEdit3("color", &materialData_->x);
-	ImGui::End();
 }
 
 void Engine::UpdateSprite() {
@@ -406,42 +374,27 @@ void Engine::UpdateSprite() {
 	ImGui::End();
 }
 
-void Engine::DrawTriangle() {
-	directXCommon_->GetCommandList()->RSSetViewports(1, &viewport_);	//viewportを設定
-	directXCommon_->GetCommandList()->RSSetScissorRects(1, &scissorRect_);//Scirssorを設定
-	//RootSignatureを設定。PSOに設定しているけど別途設定が必要
-	directXCommon_->GetCommandList()->SetGraphicsRootSignature(rootSignature_);
-	directXCommon_->GetCommandList()->SetPipelineState(graphicsPipelineState_);	//PSOを設定
-	directXCommon_->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView_);//VBVを設定
-	//形状を設定。PSOに設定しているものとはまた別。同じものを設定すると考えておけば良い
-	directXCommon_->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-	//三角形の移動
-	//transform_.rotate.y += 0.03f;
-	Matrix4x4 worldMatrix = MakeAffineMatrix(transform_.scale, transform_.rotate, transform_.translate);
-	Matrix4x4 cameraMatrix = MakeAffineMatrix(cameraTransform_.scale, cameraTransform_.rotate, cameraTransform_.translate);
-	Matrix4x4 viewMatrix = Inverse(cameraMatrix);
-	Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix_));
-	*wvpData_ = worldViewProjectionMatrix;
-
-	//マテリアルCBufferの場所を指定
-	directXCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource_->GetGPUVirtualAddress());
-	//wvp用CBufferの場所を指定
-	directXCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResource_->GetGPUVirtualAddress());
-	//SRVのディスクリプタテーブルの先頭を設定。2はルートパラメータ[2]
-	directXCommon_->GetCommandList()->SetGraphicsRootDescriptorTable(2, directXCommon_->GetTextureSrvHandleGpu());
-	//描画! (DrawCall)。3頂点で一つのインスタンス。
-	directXCommon_->GetCommandList()->DrawInstanced(6, 1, 0, 0);
+void Engine::UpdateLight() {
+	ImGui::Begin("Light");
+	ImGui::ColorEdit4("color", &directionalLightData_->color.x);
+	ImGui::DragFloat3("direction", &directionalLightData_->direction.x, 0.1f);
+	ImGui::DragFloat("itensty", &directionalLightData_->intensity, 0.1f);
+	ImGui::End();
+	
+	directionalLightData_->direction = Normalize(directionalLightData_->direction);
 }
 
 void Engine::DrawSprite() {
+	uint32_t textureHandle = directXCommon_->GetTextureSystem()->Lord("resources/uvChecker.png");
+	directXCommon_->GetCommandList()->SetGraphicsRootDescriptorTable(2, directXCommon_->GetTextureSystem()->GetTextureSrvHandleGpu(textureHandle));
 	directXCommon_->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferViewSprite_);//VBVを設定
+	directXCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResourceSprite_->GetGPUVirtualAddress());
 	//Sprite用のWorldViewProjectionMatrixを作る
 	Matrix4x4 worldMatrix = MakeAffineMatrix(transformSprite.scale, transformSprite.rotate, transformSprite.translate);
 	Matrix4x4 viewMatrix = MakeIdentity4x4();
 	Matrix4x4 projectionMatrixSprite = MakeOrthographicMatrix(0.0f, 0.0f, static_cast<float>(winApp_->kWindowWidth), static_cast<float>(winApp_->kWindowHeight), 0.0f, 100.0f);
 	Matrix4x4 worldViewProjectionMatrixSprite = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrixSprite));
-	*transformationMatrixDataSprite_ = worldViewProjectionMatrixSprite;
+	transformationMatrixDataSprite_->WVP = worldViewProjectionMatrixSprite;
 	//wvp用CBufferの場所を指定
 	directXCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(1, transformationMatrixReourceSprite_->GetGPUVirtualAddress());
 	//描画! (DrawCall)。3頂点で一つのインスタンス。
@@ -449,8 +402,18 @@ void Engine::DrawSprite() {
 }
 
 void Engine::PreDraw() {
-	if(directXCommon_)
-	directXCommon_->PreDraw();
+	if (directXCommon_) {
+		directXCommon_->PreDraw();
+	}
+	directXCommon_->GetCommandList()->RSSetViewports(1, &viewport_);	//viewportを設定
+	directXCommon_->GetCommandList()->RSSetScissorRects(1, &scissorRect_);//Scirssorを設定
+	//RootSignatureを設定。PSOに設定しているけど別途設定が必要
+	directXCommon_->GetCommandList()->SetGraphicsRootSignature(rootSignature_);
+	directXCommon_->GetCommandList()->SetPipelineState(graphicsPipelineState_);	//PSOを設定
+	//SRVのディスクリプタテーブルの先頭を設定。2はルートパラメータ[2]
+	directXCommon_->GetCommandList()->SetGraphicsRootDescriptorTable(2, directXCommon_->GetTextureSystem()->GetTextureSrvHandleGpu(0));
+	//光源のコマンドを積む
+	directXCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource_->GetGPUVirtualAddress());
 }
 
 void Engine::PostDraw() {
