@@ -1,29 +1,31 @@
 #pragma once
 #include <d3d12.h>
 #include <VertexData.h>
+#include <MaterialData.h>
+#include <TransformationMatrix.h>
 #include <cstdint>
 #include <Matrix4x4.h>
 #include <Transform.h>
 
-#include "TextureSystem.h"
-#include "MaterialData.h"
-#include "TransformationMatrix.h"
-
 class Camera;
 
-class Sphere {
+class Triangle {
 public:
-	static int32_t sphereNum;
+	static int32_t triangleNum;
 
-	Sphere() = default;
-	~Sphere();
+	Triangle() = default;
+	~Triangle();
 
-	void Initialize(ID3D12Device* device, ID3D12GraphicsCommandList* commandList, TextureSystem* textureSystem);
+	void Initialize(ID3D12Device* device, ID3D12GraphicsCommandList* commandList);
 	void Update();
 	void Draw(const Camera& camera);
+
+	/// <summary>
+	/// 頂点を指定する
+	/// </summary>
+	/// <param name="vertex"></param>
+	void SetVertex(Vector3 vertex[3]);
 private:
-	static const uint32_t kSubdivision = 16;//分割数
-	uint32_t numberOfVertex_{};//頂点数
 	//コマンドリスト(まとまった命令群)
 	ID3D12GraphicsCommandList* commandList_ = nullptr;
 	//デバイス
@@ -42,14 +44,8 @@ private:
 	MaterialData* materialData_ = nullptr;
 	//SRT
 	Transforms transform_{};
-	//テクスチャのシステム
-	TextureSystem* textureSystem_ = nullptr;
-	//テクスチャのフラグ
-	bool useMonsterBall_ = false;
-	//テクスチャ番号
-	uint32_t uvChackTextureNum_{};
-	uint32_t monsterBallTextureNum_{};
 
-	int32_t myNumber_;
+	int32_t myNumber_{};
+
 };
 

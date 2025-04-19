@@ -22,14 +22,20 @@
     <Filter Include="imgui">
       <UniqueIdentifier>{654c6480-8f14-4ed3-81ae-cb5aa1b0680d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ソース ファイル\Camera">
+      <UniqueIdentifier>{60b74064-192e-476a-98ce-9cb820379bbd}</UniqueIdentifier>
+    </Filter>
     <Filter Include="ソース ファイル\Shape">
       <UniqueIdentifier>{cd42701d-aa57-4edd-a8d4-25a99dda32a1}</UniqueIdentifier>
     </Filter>
     <Filter Include="ソース ファイル\Shape\Sphere">
       <UniqueIdentifier>{54d0e243-1776-4646-bb68-17cdd4e2d10e}</UniqueIdentifier>
     </Filter>
-    <Filter Include="ソース ファイル\Camera">
-      <UniqueIdentifier>{60b74064-192e-476a-98ce-9cb820379bbd}</UniqueIdentifier>
+    <Filter Include="ソース ファイル\Shape\Triangle">
+      <UniqueIdentifier>{53095a36-f67a-4369-9b3b-408d64fa2d32}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\System\Texture">
+      <UniqueIdentifier>{79698d80-3e8e-4c58-8f92-ffe488c2bf80}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -86,6 +92,15 @@
     </ClCompile>
     <ClCompile Include="System\Camera.cpp">
       <Filter>ソース ファイル\Camera</Filter>
+    </ClCompile>
+    <ClCompile Include="Shape\Triangle.cpp">
+      <Filter>ソース ファイル\Shape\Triangle</Filter>
+    </ClCompile>
+    <ClCompile Include="TextureSystem.cpp">
+      <Filter>ソース ファイル\System\Texture</Filter>
+    </ClCompile>
+    <ClCompile Include="Math\VectorCalculations.cpp">
+      <Filter>ソース ファイル\Math</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -157,6 +172,24 @@
     </ClInclude>
     <ClInclude Include="System\Camera.h">
       <Filter>ソース ファイル\Camera</Filter>
+    </ClInclude>
+    <ClInclude Include="Shape\Triangle.h">
+      <Filter>ソース ファイル\Shape\Triangle</Filter>
+    </ClInclude>
+    <ClInclude Include="TextureSystem.h">
+      <Filter>ソース ファイル\System\Texture</Filter>
+    </ClInclude>
+    <ClInclude Include="Math\MaterialData.h">
+      <Filter>ソース ファイル\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Math\TransformationMatrix.h">
+      <Filter>ソース ファイル\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Math\DirectionalLight.h">
+      <Filter>ソース ファイル\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Math\VectorCalculations.h">
+      <Filter>ソース ファイル\Math</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

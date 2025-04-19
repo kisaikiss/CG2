@@ -10,6 +10,8 @@
 
 #include "Transform.h"
 #include "Matrix4x4.h"
+#include "DirectionalLight.h"
+#include "TransformationMatrix.h"
 
 
 #pragma comment(lib,"dxcompiler.lib")
@@ -25,11 +27,9 @@ public:
 
 	bool ProcessMessage();
 
-	void UpdateTriangle();
-
 	void UpdateSprite();
 
-	void DrawTriangle();
+	void UpdateLight();
 
 	void DrawSprite();
 
@@ -51,8 +51,12 @@ public:
 	/// <returns>描画コマンドリスト</returns>
 	ID3D12GraphicsCommandList* GetCommandList() const { return directXCommon_->GetCommandList(); }
 
-	Transforms GetCameraTransforms() const { return cameraTransform_; }
-	Matrix4x4 GetProjectionMatrix()const { return projectionMatrix_; }
+	/// <summary>
+	/// テクスチャのシステムを取得
+	/// </summary>
+	/// <returns></returns>
+	TextureSystem* GetTextureSystem() const { return textureSystem_; }
+
 private:
 	std::shared_ptr<WinApp> winApp_;
 	std::shared_ptr<DirectXCommon> directXCommon_;
@@ -63,27 +67,10 @@ private:
 	// シリアライズしてバイナリにする
 	ID3DBlob* signatureBlob_ = nullptr;
 	ID3DBlob* errorBlob_ = nullptr;
-	// 実際に頂点リソースを作る
-	ID3D12Resource* vertexResource_ = nullptr;
-	//マテリアル用のリソースを作る
-	ID3D12Resource* materialResource_ = nullptr;
-	//wvp用リソース
-	ID3D12Resource* wvpResource_ = nullptr;
 	// ビューポート
 	D3D12_VIEWPORT viewport_{};
 	//シザー矩形
 	D3D12_RECT scissorRect_{};
-
-	//三角形のトランスフォーム
-	Transforms transform_{ {1.f,1.f,1.f},{0.f,0.f,0.f},{0.f,0.f,0.f} };
-	//カメラトランスフォーム
-	Transforms cameraTransform_{ {1.f,1.f,1.f},{0.f,0.f,0.f},{0.f,0.f,-5.f} };
-	//透視投影行列
-	Matrix4x4 projectionMatrix_{};
-
-	//データを書き込む
-	Matrix4x4* wvpData_ = nullptr;
-	Vector4* materialData_ = nullptr;
 
 	ID3D12RootSignature* rootSignature_ = nullptr;
 
@@ -97,10 +84,18 @@ private:
 
 	//スプライト関連
 	ID3D12Resource* vertexResourceSprite_ = nullptr;
+	ID3D12Resource* materialResourceSprite_ = nullptr;
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferViewSprite_{};
 	ID3D12Resource* transformationMatrixReourceSprite_ = nullptr;
-	Matrix4x4* transformationMatrixDataSprite_ = nullptr;
+	TransformationMatrix* transformationMatrixDataSprite_ = nullptr;
 	Transforms transformSprite{};
+
+	//テクスチャのシステム
+	TextureSystem* textureSystem_ = nullptr;
+
+	//光源
+	ID3D12Resource* directionalLightResource_ = nullptr;
+	DirectionalLight* directionalLightData_ = nullptr;
 
 	/// <summary>
 	/// DXC初期化
