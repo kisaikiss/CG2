@@ -17,6 +17,7 @@ int32_t Sphere::sphereNum = 1;
 Sphere::~Sphere() {
 	vertexResource_->Release();
 	transformationResource_->Release();
+	indexResource_->Release();
 	materialResource_->Release();
 }
 
@@ -26,7 +27,10 @@ void Sphere::Initialize(ID3D12Device* device, ID3D12GraphicsCommandList* command
 	commandList_ = commandList;
 	device_ = device;
 	textureSystem_ = textureSystem;
-	numberOfVertex_ = kSubdivision * kSubdivision * 6;
+	numberOfVertex_ = kSubdivision * kSubdivision * 4;
+	numberOfIndex_ = kSubdivision * kSubdivision * 6;
+
+	//頂点リソース
 	vertexResource_ = CreateBufferResource(device, sizeof(VertexData) * numberOfVertex_);
 	//リソースの先頭のアドレスから使う
 	vertexBufferView_.BufferLocation = vertexResource_->GetGPUVirtualAddress();
@@ -35,6 +39,17 @@ void Sphere::Initialize(ID3D12Device* device, ID3D12GraphicsCommandList* command
 	//1頂点あたりのサイズ
 	vertexBufferView_.StrideInBytes = sizeof(VertexData);
 	vertexResource_->Map(0, nullptr, reinterpret_cast<void**>(&vertexData_));
+
+	//IndexResource
+	indexResource_ = CreateBufferResource(device, sizeof(uint32_t) * numberOfIndex_);
+	//リソースの先頭のアドレスから使う
+	indexBufferView_.BufferLocation = indexResource_->GetGPUVirtualAddress();
+	//使用するリソースのサイズ
+	indexBufferView_.SizeInBytes = sizeof(uint32_t) * numberOfIndex_;
+	//format
+	indexBufferView_.Format = DXGI_FORMAT_R32_UINT;
+	indexResource_->Map(0, nullptr, reinterpret_cast<void**>(&indexData_));
+
 	//transformation用のリソースを作る。TransformationMatrix 1つ分のサイズを用意する
 	transformationResource_ = CreateBufferResource(device_, sizeof(TransformationMatrix));
 	//データを書き込む
@@ -85,6 +100,7 @@ void Sphere::Update() {
 		//経度の方向に分割 0 ~ 2π
 		for (uint32_t lonIndex = 0; lonIndex < kSubdivision; ++lonIndex) {
 			uint32_t start = (latIndex * kSubdivision + lonIndex) * 6;
+			uint32_t vertexStart = (latIndex * kSubdivision + lonIndex) * 4;
 			float lon = lonIndex * kLonEvery;//現在の経度
 			float lonNext = lon + kLonEvery;
 			float u = static_cast<float>(lonIndex) / static_cast<float>(kSubdivision);
@@ -150,12 +166,13 @@ void Sphere::Update() {
 			d.normal.y = d.position.y;
 			d.normal.z = d.position.z;
 
-			vertexData_[start] = a;
-			vertexData_[start + 1] = b;
-			vertexData_[start + 2] = c;
-			vertexData_[start + 3] = c;
-			vertexData_[start + 4] = b;
-			vertexData_[start + 5] = d;
+			vertexData_[vertexStart] = a;
+			vertexData_[vertexStart + 1] = b;
+			vertexData_[vertexStart + 2] = c;
+			vertexData_[vertexStart + 3] = d;
+
+			indexData_[start] = vertexStart;	indexData_[start + 1] = vertexStart + 1;	indexData_[start + 2] = vertexStart + 2;
+			indexData_[start + 3] = vertexStart + 1;	indexData_[start + 4] = vertexStart + 3;	indexData_[start + 5] = vertexStart + 2;
 		}
 	}
 }
@@ -166,10 +183,11 @@ void Sphere::Draw(const Camera& camera) {
 	transformationData_->WVP = worldViewProjectionMatrix;
 	transformationData_->World = worldMatrix;
 	commandList_->IASetVertexBuffers(0, 1, &vertexBufferView_);//VBVを設定
+	commandList_->IASetIndexBuffer(&indexBufferView_);//IBVを設定
 	//wvp用CBufferの場所を指定
 	commandList_->SetGraphicsRootConstantBufferView(1, transformationResource_->GetGPUVirtualAddress());
 	commandList_->SetGraphicsRootConstantBufferView(0, materialResource_->GetGPUVirtualAddress());
 	commandList_->SetGraphicsRootDescriptorTable(2, useMonsterBall_ ? textureSystem_->GetTextureSrvHandleGpu(monsterBallTextureNum_) : textureSystem_->GetTextureSrvHandleGpu(uvChackTextureNum_));
 	commandList_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	commandList_->DrawInstanced(numberOfVertex_, 1, 0, 0);
+	commandList_->DrawIndexedInstanced(numberOfIndex_, 1, 0, 0, 0);
 }

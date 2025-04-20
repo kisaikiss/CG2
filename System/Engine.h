@@ -1,10 +1,10 @@
 #pragma once
 #include "WinApp.h"
 #include "DirectXCommon.h"
-#include "../Log.h"
+#include "Log.h"
 
 #include <dxcapi.h>
-#include "../Vector4.h"
+#include "Vector4.h"
 
 #include <memory>
 
@@ -84,8 +84,10 @@ private:
 
 	//スプライト関連
 	ID3D12Resource* vertexResourceSprite_ = nullptr;
+	ID3D12Resource* indexResourceSprite = nullptr;
 	ID3D12Resource* materialResourceSprite_ = nullptr;
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferViewSprite_{};
+	D3D12_INDEX_BUFFER_VIEW indexBufferViewSprite_{};
 	ID3D12Resource* transformationMatrixReourceSprite_ = nullptr;
 	TransformationMatrix* transformationMatrixDataSprite_ = nullptr;
 	Transforms transformSprite{};

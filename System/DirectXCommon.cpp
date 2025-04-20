@@ -1,5 +1,5 @@
 #include "DirectXCommon.h"
-#include "../Log.h"
+#include "Log.h"
 #include "DirectXUtils.h"
 #include "imgui.h"
 #include "imgui_impl_dx12.h"

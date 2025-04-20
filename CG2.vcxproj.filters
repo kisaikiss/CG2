@@ -42,16 +42,10 @@
     <ClCompile Include="main.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="ConvertString.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
     <ClCompile Include="System\DirectXCommon.cpp">
       <Filter>ソース ファイル\System</Filter>
     </ClCompile>
     <ClCompile Include="System\WinApp.cpp">
-      <Filter>ソース ファイル\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Log.cpp">
       <Filter>ソース ファイル\System</Filter>
     </ClCompile>
     <ClCompile Include="System\Engine.cpp">
@@ -96,31 +90,28 @@
     <ClCompile Include="Shape\Triangle.cpp">
       <Filter>ソース ファイル\Shape\Triangle</Filter>
     </ClCompile>
-    <ClCompile Include="TextureSystem.cpp">
-      <Filter>ソース ファイル\System\Texture</Filter>
-    </ClCompile>
     <ClCompile Include="Math\VectorCalculations.cpp">
       <Filter>ソース ファイル\Math</Filter>
     </ClCompile>
+    <ClCompile Include="System\TextureSystem.cpp">
+      <Filter>ソース ファイル\System\Texture</Filter>
+    </ClCompile>
+    <ClCompile Include="System\ConvertString.cpp">
+      <Filter>ソース ファイル\System</Filter>
+    </ClCompile>
+    <ClCompile Include="System\Log.cpp">
+      <Filter>ソース ファイル\System</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ConvertString.h">
-      <Filter>ソース ファイル</Filter>
-    </ClInclude>
     <ClInclude Include="System\DirectXCommon.h">
       <Filter>ソース ファイル\System</Filter>
     </ClInclude>
     <ClInclude Include="System\WinApp.h">
       <Filter>ソース ファイル\System</Filter>
     </ClInclude>
-    <ClInclude Include="Log.h">
-      <Filter>ソース ファイル\System</Filter>
-    </ClInclude>
     <ClInclude Include="System\Engine.h">
       <Filter>ソース ファイル\System</Filter>
-    </ClInclude>
-    <ClInclude Include="Vector4.h">
-      <Filter>ソース ファイル</Filter>
     </ClInclude>
     <ClInclude Include="Math\MatrixCalculations.h">
       <Filter>ソース ファイル\Math</Filter>
@@ -176,9 +167,6 @@
     <ClInclude Include="Shape\Triangle.h">
       <Filter>ソース ファイル\Shape\Triangle</Filter>
     </ClInclude>
-    <ClInclude Include="TextureSystem.h">
-      <Filter>ソース ファイル\System\Texture</Filter>
-    </ClInclude>
     <ClInclude Include="Math\MaterialData.h">
       <Filter>ソース ファイル\Math</Filter>
     </ClInclude>
@@ -189,6 +177,18 @@
       <Filter>ソース ファイル\Math</Filter>
     </ClInclude>
     <ClInclude Include="Math\VectorCalculations.h">
+      <Filter>ソース ファイル\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="System\TextureSystem.h">
+      <Filter>ソース ファイル\System\Texture</Filter>
+    </ClInclude>
+    <ClInclude Include="System\ConvertString.h">
+      <Filter>ソース ファイル\System</Filter>
+    </ClInclude>
+    <ClInclude Include="System\Log.h">
+      <Filter>ソース ファイル\System</Filter>
+    </ClInclude>
+    <ClInclude Include="Math\Vector4.h">
       <Filter>ソース ファイル\Math</Filter>
     </ClInclude>
   </ItemGroup>

@@ -11,7 +11,7 @@
 #include <externals/DirectXTex/d3dx12.h>
 
 #include "WinApp.h"
-#include "../ConvertString.h"
+#include "ConvertString.h"
 
 /// <summary>
 /// DirectX
