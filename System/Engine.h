@@ -27,11 +27,7 @@ public:
 
 	bool ProcessMessage();
 
-	void UpdateSprite();
-
 	void UpdateLight();
-
-	void DrawSprite();
 
 	void PreDraw();
 
@@ -56,6 +52,10 @@ public:
 	/// </summary>
 	/// <returns></returns>
 	TextureSystem* GetTextureSystem() const { return textureSystem_; }
+
+	DirectXCommon* GetDirectXCommon() const { return directXCommon_.get(); }
+
+	WinApp* GetWinApp() const { return winApp_.get(); }
 
 private:
 	std::shared_ptr<WinApp> winApp_;
@@ -82,16 +82,6 @@ private:
 	IDxcBlob* vertexShaderBlob_ = nullptr;
 	IDxcBlob* pixelShaderBlob_ = nullptr;
 
-	//スプライト関連
-	ID3D12Resource* vertexResourceSprite_ = nullptr;
-	ID3D12Resource* indexResourceSprite = nullptr;
-	ID3D12Resource* materialResourceSprite_ = nullptr;
-	D3D12_VERTEX_BUFFER_VIEW vertexBufferViewSprite_{};
-	D3D12_INDEX_BUFFER_VIEW indexBufferViewSprite_{};
-	ID3D12Resource* transformationMatrixReourceSprite_ = nullptr;
-	TransformationMatrix* transformationMatrixDataSprite_ = nullptr;
-	Transforms transformSprite{};
-
 	//テクスチャのシステム
 	TextureSystem* textureSystem_ = nullptr;
 
@@ -113,10 +103,5 @@ private:
 	/// 三角形のリソースを生成
 	/// </summary>
 	void CreateTriangleResource();
-
-	/// <summary>
-	/// スプライトのリソースを生成
-	/// </summary>
-	void CreateSpriteResource();
 };
 

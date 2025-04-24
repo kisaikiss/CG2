@@ -2,15 +2,16 @@
 #include <Transform.h>
 #include <Matrix4x4.h>
 
+
 class Camera {
 public:
 	Camera();
 
-	void Update();
+	virtual void Update();
 
 	Matrix4x4 GetVeiwProjectionMatrix() const { return viewProjectionMatrix_; }
 
-private:
+protected:
 	Matrix4x4 worldMatrix_;
 	Matrix4x4 viewProjectionMatrix_;
 	Matrix4x4 projectionMatrix_;

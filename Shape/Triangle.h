@@ -1,11 +1,12 @@
 #pragma once
 #include <d3d12.h>
 #include <VertexData.h>
-#include <MaterialData.h>
+#include <Material.h>
 #include <TransformationMatrix.h>
 #include <cstdint>
 #include <Matrix4x4.h>
 #include <Transform.h>
+#include "DirectXCommon.h"
 
 class Camera;
 
@@ -13,10 +14,9 @@ class Triangle {
 public:
 	static int32_t triangleNum;
 
-	Triangle() = default;
+	Triangle(DirectXCommon* dxCommon);
 	~Triangle();
 
-	void Initialize(ID3D12Device* device, ID3D12GraphicsCommandList* commandList);
 	void Update();
 	void Draw(const Camera& camera);
 
@@ -41,7 +41,7 @@ private:
 	//wvpデータ
 	TransformationMatrix* transformationData_ = nullptr;
 	//マテリアル
-	MaterialData* materialData_ = nullptr;
+	Material* material_ = nullptr;
 	//SRT
 	Transforms transform_{};
 

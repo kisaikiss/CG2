@@ -34,6 +34,12 @@ public:
 	/// </summary>
 	/// <returns></returns>
 	HWND GetHWND() const { return hWnd_; }
+
+	/// <summary>
+	/// ウィンドウクラスの取得
+	/// </summary>
+	/// <returns></returns>
+	WNDCLASS GetWndClass() const { return wndClass_; }
 private:
 	HWND hWnd_ = nullptr;	//ウィンドウハンドル
 	WNDCLASS wndClass_{};

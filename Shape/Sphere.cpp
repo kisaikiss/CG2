@@ -14,24 +14,20 @@
 
 int32_t Sphere::sphereNum = 1;
 
-Sphere::~Sphere() {
-	vertexResource_->Release();
-	transformationResource_->Release();
-	indexResource_->Release();
-	materialResource_->Release();
-}
-
-void Sphere::Initialize(ID3D12Device* device, ID3D12GraphicsCommandList* commandList, TextureSystem* textureSystem) {
+Sphere::Sphere(DirectXCommon* dxCommon) {
+	if (dxCommon == nullptr) {
+		assert(0);
+	}
 	myNumber_ = sphereNum;
 	sphereNum++;
-	commandList_ = commandList;
-	device_ = device;
-	textureSystem_ = textureSystem;
+	commandList_ = dxCommon->GetCommandList();
+	device_ = dxCommon->GetDevice();
+	textureSystem_ = dxCommon->GetTextureSystem();
 	numberOfVertex_ = kSubdivision * kSubdivision * 4;
 	numberOfIndex_ = kSubdivision * kSubdivision * 6;
 
 	//頂点リソース
-	vertexResource_ = CreateBufferResource(device, sizeof(VertexData) * numberOfVertex_);
+	vertexResource_ = CreateBufferResource(device_, sizeof(VertexData) * numberOfVertex_);
 	//リソースの先頭のアドレスから使う
 	vertexBufferView_.BufferLocation = vertexResource_->GetGPUVirtualAddress();
 	//使用するリソースのサイズは球の頂点数のサイズ
@@ -41,7 +37,7 @@ void Sphere::Initialize(ID3D12Device* device, ID3D12GraphicsCommandList* command
 	vertexResource_->Map(0, nullptr, reinterpret_cast<void**>(&vertexData_));
 
 	//IndexResource
-	indexResource_ = CreateBufferResource(device, sizeof(uint32_t) * numberOfIndex_);
+	indexResource_ = CreateBufferResource(device_, sizeof(uint32_t) * numberOfIndex_);
 	//リソースの先頭のアドレスから使う
 	indexBufferView_.BufferLocation = indexResource_->GetGPUVirtualAddress();
 	//使用するリソースのサイズ
@@ -60,19 +56,34 @@ void Sphere::Initialize(ID3D12Device* device, ID3D12GraphicsCommandList* command
 	transformationData_->World = MakeIdentity4x4();
 	//トランスフォーム
 	transform_.scale = { 1.f,1.f,1.f };
-	transform_.translate = {0.f,0.f,0.9f};
+	transform_.translate = { 0.f,0.f,0.9f };
 	// マテリアル用のリソースを作る。今回はcolor一つ分のサイズを用意
-	materialResource_ = CreateBufferResource(device_, sizeof(MaterialData));
+	materialResource_ = CreateBufferResource(device_, sizeof(Material));
 	//マテリアルにデータを書き込む
 	//書き込むためのアドレスを取得
-	materialResource_->Map(0, nullptr, reinterpret_cast<void**>(&materialData_));
+	materialResource_->Map(0, nullptr, reinterpret_cast<void**>(&material_));
 	//今回は白を書き込んでみる
-	materialData_->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+	material_->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 	//Lightingを有効にする
-	materialData_->enableLighting = true;
+	material_->enableLighting = true;
+	//単位行列を書き込んでおく
+	material_->uvTransform = MakeIdentity4x4();
+	//uvTransform
+	uvTransform_ = {
+		{1.0f,1.0f,1.0f},
+		{0.0f,0.0f,0.0f},
+		{0.0f,0.0f,0.0f}
+	};
 	//テクスチャ読み込み
 	uvChackTextureNum_ = textureSystem_->Lord("resources/uvChecker.png");
 	monsterBallTextureNum_ = textureSystem_->Lord("resources/monsterBall.png");
+}
+
+Sphere::~Sphere() {
+	vertexResource_->Release();
+	transformationResource_->Release();
+	indexResource_->Release();
+	materialResource_->Release();
 }
 
 void Sphere::Update() {
@@ -84,7 +95,10 @@ void Sphere::Update() {
 	ImGui::DragFloat3("position", &transform_.translate.x, 0.01f);
 	ImGui::DragFloat3("rotate", &transform_.rotate.x, 0.01f);
 	ImGui::DragFloat3("scale", &transform_.scale.x, 0.01f);
-	ImGui::ColorEdit3("color", &materialData_->color.x);
+	ImGui::ColorEdit3("color", &material_->color.x);
+	ImGui::DragFloat3("uvPosition", &uvTransform_.translate.x, 0.01f);
+	ImGui::DragFloat3("uvRotate", &uvTransform_.rotate.x, 0.01f);
+	ImGui::DragFloat3("uvScale", &uvTransform_.scale.x, 0.01f);
 	ImGui::Checkbox("useMonsterBall", &useMonsterBall_);
 	ImGui::End();
 
@@ -182,6 +196,10 @@ void Sphere::Draw(const Camera& camera) {
 	Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, camera.GetVeiwProjectionMatrix());
 	transformationData_->WVP = worldViewProjectionMatrix;
 	transformationData_->World = worldMatrix;
+	
+	Matrix4x4 uvTransformMatrix = MakeAffineMatrix(uvTransform_.scale, uvTransform_.rotate, uvTransform_.translate);
+	material_->uvTransform = uvTransformMatrix;
+
 	commandList_->IASetVertexBuffers(0, 1, &vertexBufferView_);//VBVを設定
 	commandList_->IASetIndexBuffer(&indexBufferView_);//IBVを設定
 	//wvp用CBufferの場所を指定

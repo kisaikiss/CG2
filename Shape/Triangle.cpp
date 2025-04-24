@@ -13,18 +13,15 @@
 
 int32_t Triangle::triangleNum = 1;
 
-Triangle::~Triangle() {
-	vertexResource_->Release();
-	transformationResource_->Release();
-	materialResource_->Release();
-}
-
-void Triangle::Initialize(ID3D12Device* device, ID3D12GraphicsCommandList* commandList) {
+Triangle::Triangle(DirectXCommon* dxCommon) {
+	if (dxCommon == nullptr) {
+		assert(0);
+	}
 	myNumber_ = triangleNum;
 	triangleNum++;
-	commandList_ = commandList;
-	device_ = device;
-	vertexResource_ = CreateBufferResource(device, sizeof(VertexData) * 3);
+	commandList_ = dxCommon->GetCommandList();
+	device_ = dxCommon->GetDevice();
+	vertexResource_ = CreateBufferResource(device_, sizeof(VertexData) * 3);
 	//リソースの先頭のアドレスから使う
 	vertexBufferView_.BufferLocation = vertexResource_->GetGPUVirtualAddress();
 	//使用するリソースのサイズは球の頂点数のサイズ
@@ -44,14 +41,16 @@ void Triangle::Initialize(ID3D12Device* device, ID3D12GraphicsCommandList* comma
 	transform_.scale = { 1.f,1.f,1.f };
 	transform_.translate = { 0.f,0.f,0.f };
 	// マテリアル用のリソースを作る。今回はcolor一つ分のサイズを用意
-	materialResource_ = CreateBufferResource(device_, sizeof(MaterialData));
+	materialResource_ = CreateBufferResource(device_, sizeof(Material));
 	//マテリアルにデータを書き込む
 	//マテリアルデータへ書き込むためのアドレスを取得
-	materialResource_->Map(0, nullptr, reinterpret_cast<void**>(&materialData_));
+	materialResource_->Map(0, nullptr, reinterpret_cast<void**>(&material_));
 	//今回は白を書き込んでみる
-	materialData_->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+	material_->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 	//Lightingを無効にする
-	materialData_->enableLighting = false;
+	material_->enableLighting = false;
+	//単位行列を書き込んでおく
+	material_->uvTransform = MakeIdentity4x4();
 
 	//頂点データへ書き込むためのアドレスを取得
 	vertexResource_->Map(0, nullptr, reinterpret_cast<void**>(&vertexData_));
@@ -65,9 +64,15 @@ void Triangle::Initialize(ID3D12Device* device, ID3D12GraphicsCommandList* comma
 	vertexData_[2].position = { 0.5f,-0.5f,0.0f,1.0f };
 	vertexData_[2].texcoord = { 1.f,1.f };
 
-	
+
 
 	vertexData_->normal = { 0.0f, 0.0f,-1.0f };
+}
+
+Triangle::~Triangle() {
+	vertexResource_->Release();
+	transformationResource_->Release();
+	materialResource_->Release();
 }
 
 void Triangle::Update() {
@@ -79,7 +84,7 @@ void Triangle::Update() {
 	ImGui::DragFloat3("position", &transform_.translate.x, 0.01f);
 	ImGui::DragFloat3("rotate", &transform_.rotate.x, 0.01f);
 	ImGui::DragFloat3("scale", &transform_.scale.x, 0.01f);
-	ImGui::ColorEdit3("color", &materialData_->color.x);
+	ImGui::ColorEdit3("color", &material_->color.x);
 	ImGui::End();
 
 

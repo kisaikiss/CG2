@@ -6,8 +6,9 @@
 #include <Transform.h>
 
 #include "TextureSystem.h"
-#include "MaterialData.h"
+#include "Material.h"
 #include "TransformationMatrix.h"
+#include "DirectXCommon.h"
 
 class Camera;
 
@@ -15,10 +16,9 @@ class Sphere {
 public:
 	static int32_t sphereNum;
 
-	Sphere() = default;
+	Sphere(DirectXCommon* dxCommon);
 	~Sphere();
 
-	void Initialize(ID3D12Device* device, ID3D12GraphicsCommandList* commandList, TextureSystem* textureSystem);
 	void Update();
 	void Draw(const Camera& camera);
 private:
@@ -45,9 +45,11 @@ private:
 	//indexデータ
 	uint32_t* indexData_ = nullptr;
 	//マテリアル
-	MaterialData* materialData_ = nullptr;
+	Material* material_ = nullptr;
 	//SRT
 	Transforms transform_{};
+	//uvTransform
+	Transforms uvTransform_{};
 	//テクスチャのシステム
 	TextureSystem* textureSystem_ = nullptr;
 	//テクスチャのフラグ
@@ -56,6 +58,6 @@ private:
 	uint32_t uvChackTextureNum_{};
 	uint32_t monsterBallTextureNum_{};
 
-	int32_t myNumber_;
+	int32_t myNumber_{};
 };
 

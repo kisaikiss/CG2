@@ -5,7 +5,7 @@ class Logger {
 public:
 	static std::string logFilePath;
 
-	static void LogInit();
+	void LogInit();
 
 	static void Log(const std::string& message);
 private:

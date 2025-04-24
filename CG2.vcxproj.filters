@@ -37,6 +37,12 @@
     <Filter Include="ソース ファイル\System\Texture">
       <UniqueIdentifier>{79698d80-3e8e-4c58-8f92-ffe488c2bf80}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ソース ファイル\2D">
+      <UniqueIdentifier>{1c500806-aa6a-42b8-b204-9f0d49de7bd4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\Shape\Model">
+      <UniqueIdentifier>{43f2e03c-559d-455c-8cac-00984fc22dfc}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -101,6 +107,21 @@
     </ClCompile>
     <ClCompile Include="System\Log.cpp">
       <Filter>ソース ファイル\System</Filter>
+    </ClCompile>
+    <ClCompile Include="2D\Sprite.cpp">
+      <Filter>ソース ファイル\2D</Filter>
+    </ClCompile>
+    <ClCompile Include="Shape\Model.cpp">
+      <Filter>ソース ファイル\Shape\Model</Filter>
+    </ClCompile>
+    <ClCompile Include="System\Input.cpp">
+      <Filter>ソース ファイル\System</Filter>
+    </ClCompile>
+    <ClCompile Include="System\DebugCamera.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="System\D3DResourceLeakChecker.cpp">
+      <Filter>ソース ファイル</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -167,7 +188,7 @@
     <ClInclude Include="Shape\Triangle.h">
       <Filter>ソース ファイル\Shape\Triangle</Filter>
     </ClInclude>
-    <ClInclude Include="Math\MaterialData.h">
+    <ClInclude Include="Math\Material.h">
       <Filter>ソース ファイル\Math</Filter>
     </ClInclude>
     <ClInclude Include="Math\TransformationMatrix.h">
@@ -190,6 +211,27 @@
     </ClInclude>
     <ClInclude Include="Math\Vector4.h">
       <Filter>ソース ファイル\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="2D\Sprite.h">
+      <Filter>ソース ファイル\2D</Filter>
+    </ClInclude>
+    <ClInclude Include="Shape\Model.h">
+      <Filter>ソース ファイル\Shape\Model</Filter>
+    </ClInclude>
+    <ClInclude Include="System\ModelData.h">
+      <Filter>ソース ファイル\System</Filter>
+    </ClInclude>
+    <ClInclude Include="System\MaterialData.h">
+      <Filter>ソース ファイル\System</Filter>
+    </ClInclude>
+    <ClInclude Include="System\Input.h">
+      <Filter>ソース ファイル\System</Filter>
+    </ClInclude>
+    <ClInclude Include="System\DebugCamera.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="System\D3DResourceLeakChecker.h">
+      <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

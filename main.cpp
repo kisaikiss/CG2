@@ -7,6 +7,15 @@
 #include "Sphere.h"
 #include "Triangle.h"
 #include "Camera.h"
+#include "Sprite.h"
+#include <Model.h>
+#include "Input.h"
+#include "DebugCamera.h"
+#include "D3DResourceLeakChecker.h"
+
+#include "imgui.h"
+#include "imgui_impl_dx12.h"
+#include "imgui_impl_win32.h"
 
 #pragma comment(lib,"Dbghelp.lib")
 
@@ -40,65 +49,99 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	//COM初期化
 	CoInitializeEx(0, COINIT_MULTITHREADED);
-	Logger::LogInit();
-	Sphere* sphere = new Sphere();
-	//Sphere* sphere2 = new Sphere();
-	Triangle* triangle1 = new Triangle();
-	Triangle* triangle2 = new Triangle();
-	Camera* camera = new Camera();
+
+	D3DResourceLeakChecker leakCheck;
+	Logger* log = new Logger();
+	log->LogInit();
+	delete log;
 	Engine* engine = new Engine();
-
 	engine->Initialize();
-	sphere->Initialize(engine->GetDevice(), engine->GetCommandList(),engine->GetTextureSystem());
-	//sphere2->Initialize(engine->GetDevice(), engine->GetCommandList(), engine->GetTextureSystem());
-	triangle1->Initialize(engine->GetDevice(), engine->GetCommandList());
-	triangle2->Initialize(engine->GetDevice(), engine->GetCommandList());;
 
-	Vector3 kTriangle2Vertex[3] = {
-		{ -0.5f,-0.5f,0.5f },
-		{0.0f, 0.0f, 0.0f},
-		{0.5f,-0.5f,-0.5f}
-	};
-	triangle2->SetVertex(kTriangle2Vertex);
+	/*--------------------------------------------*/
+	/*理由がない限りここより上には追加で何も書くな*/
+	/*--------------------------------------------*/
+	
+	Sphere* sphere = new Sphere(engine->GetDirectXCommon());
+	Triangle* triangle1 = new Triangle(engine->GetDirectXCommon());
+	Camera* camera = new Camera();
+	Sprite* sprite = new Sprite(engine->GetDirectXCommon(),"resources/uvChecker.png");
+	Model* model = new Model(engine->GetDirectXCommon(),"resources/a","teapot.obj");
+	Input* input = new Input();
+	DebugCamera* debugCamera = new DebugCamera(input);
+
+	Camera* rialCamera = camera;
+
+	bool isDebugCamera = false;
+
+	input->Initialize(engine->GetWinApp());
 
 	//ウィンドウのxボタンが押されるまでループ
 	while (engine->ProcessMessage() == 0) {
 		//ゲームの処理
 		engine->FrameStart();
-		//ImGui::ShowDemoWindow();
 
-		engine->UpdateSprite();
+		/*------------------------*/
+		/*↓↓更新処理ここから↓↓*/
+		/*------------------------*/
+
+		input->Update();
 		sphere->Update();
-		//sphere2->Update();
 		triangle1->Update();
-		triangle2->Update();
-		camera->Update();
-		engine->UpdateLight();
+		model->Update();
+		
+		
 
+		if (input->GetPressingCount('0') == 1) {
+			if (isDebugCamera == true) {
+				isDebugCamera = false;
+			} else {
+				isDebugCamera = true;
+			}
+		}
+		if (isDebugCamera == true) {
+			debugCamera->Update();
+			rialCamera = debugCamera;
+		} else {
+			camera->Update();
+			rialCamera = camera;
+		}
+		
+		engine->UpdateLight();
+		/*------------------------*/
+		/*↑↑更新処理ここまで↑↑*/
+		/*------------------------*/
+
+		/*------------------------*/
+		/*↓↓描画処理ここから↓↓*/
+		/*------------------------*/
 
 		engine->PreDraw();
 
-		//engine->DrawTriangle();
-		triangle1->Draw(*camera);
-		triangle2->Draw(*camera);
-		sphere->Draw(*camera);
-		//sphere2->Draw(*camera);
+		triangle1->Draw(*rialCamera);
+		sphere->Draw(*rialCamera);
+		model->Draw(*rialCamera);
 
-		engine->DrawSprite();
+		Vector2 pos = { 2.f,3.f };
+		Vector2 size = { 100.f,500.f };
+
+		sprite->Draw();
 
 		engine->PostDraw();
+		/*------------------------*/
+		/*↑↑描画処理ここまで↑↑*/
+		/*------------------------*/
 	}
 
-	//出力ウィンドウへの文字出力
-	OutputDebugStringA("Hello, DirectX!!\n");
-
 	delete sphere;
-	//delete sphere2;
+	delete sprite;
 	delete triangle1;
-	delete triangle2;
 	delete camera;
+	delete debugCamera;
+	delete model;
+	delete input;
 	engine->Finalize();
 	delete engine;
+	
 	CoUninitialize();
 	return 0;
 }

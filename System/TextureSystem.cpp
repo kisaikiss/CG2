@@ -30,7 +30,8 @@ uint32_t TextureSystem::Lord(const std::string& filePath) {
 	const DirectX::TexMetadata metadata = mipImages.GetMetadata();
 	textures_[textureNum_].resource = CreateTextureResource(device_, metadata);
 	textures_[textureNum_].intermediateResource = UploadTextureData(textures_[textureNum_].resource, mipImages, device_, commandList_);
-
+	textures_[textureNum_].width = static_cast<float>(metadata.width);
+	textures_[textureNum_].height = static_cast<float>(metadata.height);
 	//メタデータを基にSRVの設定
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
 	srvDesc.Format = metadata.format;

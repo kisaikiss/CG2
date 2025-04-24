@@ -79,6 +79,14 @@ Matrix4x4 MakeAffineMatrix(const Vector3& scale, const Vector3& rotate, const Ve
 Vector3 Transform(const Vector3& vector, const Matrix4x4& matrix);
 
 /// <summary>
+/// 
+/// </summary>
+/// <param name="vector"></param>
+/// <param name="matrix"></param>
+/// <returns></returns>
+Vector3 TransforNormal(const Vector3& vector, const Matrix4x4& matrix);
+
+/// <summary>
 /// 逆行列
 /// </summary>
 /// <param name="matrix"></param>
