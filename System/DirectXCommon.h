@@ -1,6 +1,5 @@
 #pragma once
 #define DIRECTINPUT_VERSION		0x0800
-#include<GameInput.h>
 #include <Windows.h>
 #include <d3d12.h>
 #include <dxgi1_6.h>

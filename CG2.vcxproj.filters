@@ -43,6 +43,12 @@
     <Filter Include="ソース ファイル\Shape\Model">
       <UniqueIdentifier>{43f2e03c-559d-455c-8cac-00984fc22dfc}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ソース ファイル\System\Input">
+      <UniqueIdentifier>{e6c5de85-eb47-41a8-80a8-3ab65ba05f3a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\System\Utils">
+      <UniqueIdentifier>{535912f4-15a4-4662-9d78-f93a63fbb5d1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -87,9 +93,6 @@
     <ClCompile Include="Shape\Sphere.cpp">
       <Filter>ソース ファイル\Shape\Sphere</Filter>
     </ClCompile>
-    <ClCompile Include="System\DirectXUtils.cpp">
-      <Filter>ソース ファイル\System</Filter>
-    </ClCompile>
     <ClCompile Include="System\Camera.cpp">
       <Filter>ソース ファイル\Camera</Filter>
     </ClCompile>
@@ -102,12 +105,6 @@
     <ClCompile Include="System\TextureSystem.cpp">
       <Filter>ソース ファイル\System\Texture</Filter>
     </ClCompile>
-    <ClCompile Include="System\ConvertString.cpp">
-      <Filter>ソース ファイル\System</Filter>
-    </ClCompile>
-    <ClCompile Include="System\Log.cpp">
-      <Filter>ソース ファイル\System</Filter>
-    </ClCompile>
     <ClCompile Include="2D\Sprite.cpp">
       <Filter>ソース ファイル\2D</Filter>
     </ClCompile>
@@ -115,12 +112,24 @@
       <Filter>ソース ファイル\Shape\Model</Filter>
     </ClCompile>
     <ClCompile Include="System\Input.cpp">
-      <Filter>ソース ファイル\System</Filter>
+      <Filter>ソース ファイル\System\Input</Filter>
     </ClCompile>
     <ClCompile Include="System\DebugCamera.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ソース ファイル\Camera</Filter>
+    </ClCompile>
+    <ClCompile Include="System\DirectXUtils.cpp">
+      <Filter>ソース ファイル\System\Utils</Filter>
     </ClCompile>
     <ClCompile Include="System\D3DResourceLeakChecker.cpp">
+      <Filter>ソース ファイル\System\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="System\ConvertString.cpp">
+      <Filter>ソース ファイル\System\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="System\Log.cpp">
+      <Filter>ソース ファイル\System\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Audio\Audio.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
   </ItemGroup>
@@ -179,9 +188,6 @@
     <ClInclude Include="Shape\Sphere.h">
       <Filter>ソース ファイル\Shape\Sphere</Filter>
     </ClInclude>
-    <ClInclude Include="System\DirectXUtils.h">
-      <Filter>ソース ファイル\System</Filter>
-    </ClInclude>
     <ClInclude Include="System\Camera.h">
       <Filter>ソース ファイル\Camera</Filter>
     </ClInclude>
@@ -203,12 +209,6 @@
     <ClInclude Include="System\TextureSystem.h">
       <Filter>ソース ファイル\System\Texture</Filter>
     </ClInclude>
-    <ClInclude Include="System\ConvertString.h">
-      <Filter>ソース ファイル\System</Filter>
-    </ClInclude>
-    <ClInclude Include="System\Log.h">
-      <Filter>ソース ファイル\System</Filter>
-    </ClInclude>
     <ClInclude Include="Math\Vector4.h">
       <Filter>ソース ファイル\Math</Filter>
     </ClInclude>
@@ -225,12 +225,24 @@
       <Filter>ソース ファイル\System</Filter>
     </ClInclude>
     <ClInclude Include="System\Input.h">
-      <Filter>ソース ファイル\System</Filter>
+      <Filter>ソース ファイル\System\Input</Filter>
     </ClInclude>
     <ClInclude Include="System\DebugCamera.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>ソース ファイル\Camera</Filter>
+    </ClInclude>
+    <ClInclude Include="System\DirectXUtils.h">
+      <Filter>ソース ファイル\System\Utils</Filter>
     </ClInclude>
     <ClInclude Include="System\D3DResourceLeakChecker.h">
+      <Filter>ソース ファイル\System\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="System\ConvertString.h">
+      <Filter>ソース ファイル\System\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="System\Log.h">
+      <Filter>ソース ファイル\System\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Audio\Audio.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>

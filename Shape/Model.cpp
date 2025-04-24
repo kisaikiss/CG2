@@ -206,7 +206,6 @@ void Model::Update() {
 	ImGui::DragFloat3("uvPosition", &uvTransform_.translate.x, 0.01f);
 	ImGui::DragFloat3("uvRotate", &uvTransform_.rotate.x, 0.01f);
 	ImGui::DragFloat3("uvScale", &uvTransform_.scale.x, 0.01f);
-	ImGui::Checkbox("useMonsterBall", &useMonsterBall_);
 	ImGui::End();
 }
 

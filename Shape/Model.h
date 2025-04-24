@@ -60,8 +60,6 @@ private:
 	Transforms uvTransform_{};
 	//テクスチャのシステム
 	TextureSystem* textureSystem_ = nullptr;
-	//テクスチャのフラグ
-	bool useMonsterBall_ = false;
 	//テクスチャ番号
 	uint32_t textureNum_;
 

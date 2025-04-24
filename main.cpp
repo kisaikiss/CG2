@@ -12,6 +12,7 @@
 #include "Input.h"
 #include "DebugCamera.h"
 #include "D3DResourceLeakChecker.h"
+#include "Audio.h"
 
 #include "imgui.h"
 #include "imgui_impl_dx12.h"
@@ -60,12 +61,17 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	/*--------------------------------------------*/
 	/*理由がない限りここより上には追加で何も書くな*/
 	/*--------------------------------------------*/
+
+	Audio* audio = new Audio();
+
+	uint32_t soundNum = audio->SoundLoadWave("resources/Alarm01.wav");
+	audio->SoundPlayWave(soundNum);
 	
 	Sphere* sphere = new Sphere(engine->GetDirectXCommon());
 	Triangle* triangle1 = new Triangle(engine->GetDirectXCommon());
 	Camera* camera = new Camera();
 	Sprite* sprite = new Sprite(engine->GetDirectXCommon(),"resources/uvChecker.png");
-	Model* model = new Model(engine->GetDirectXCommon(),"resources/a","teapot.obj");
+	Model* model = new Model(engine->GetDirectXCommon(),"resources","player.obj");
 	Input* input = new Input();
 	DebugCamera* debugCamera = new DebugCamera(input);
 
@@ -131,7 +137,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		/*↑↑描画処理ここまで↑↑*/
 		/*------------------------*/
 	}
-
+	delete audio;
 	delete sphere;
 	delete sprite;
 	delete triangle1;

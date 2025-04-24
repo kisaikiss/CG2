@@ -8,7 +8,6 @@
 #pragma comment(lib,"d3d12.lib")
 #pragma comment(lib,"dxgi.lib")
 #pragma comment(lib,"dxguid.lib")
-#pragma comment(lib,"dinput8.lib")
 
 DirectXCommon::~DirectXCommon() {
 	// Handleとリソースを解放する
