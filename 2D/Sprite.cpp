@@ -1,15 +1,19 @@
 #include "Sprite.h"
 #include <MatrixCalculations.h>
 #include <DirectXUtils.h>
+#include <string>
+#include <sstream>
+#include "Engine.h"
 
-Sprite::Sprite(DirectXCommon* dxCommon, const std::string& fileName) {
-	if (dxCommon == nullptr) {
+
+Sprite::Sprite(Engine* engine, const std::string& fileName) {
+	if (engine == nullptr) {
 		assert(0);
 	}
 
-	commandList_ = dxCommon->GetCommandList();
-	device_ = dxCommon->GetDevice();
-	textureSystem_ = dxCommon->GetTextureSystem();
+	commandList_ = engine->GetCommandList();
+	device_ = engine->GetDevice();
+	textureSystem_ = engine->GetTextureSystem();
 	textureNum_ = textureSystem_->Lord(fileName);
 	size_ = textureSystem_->GetTextureSize(textureNum_);
 	// 頂点リソース
@@ -81,6 +85,21 @@ Sprite::~Sprite() {
 	transformationResource_->Release();
 	indexResource_->Release();
 	materialResource_->Release();
+}
+
+void Sprite::Update() {
+
+	std::stringstream myNumString;
+	myNumString << textureNum_;
+	std::string name = "Sprite";
+	name = name + myNumString.str();
+	ImGui::Begin(name.c_str());
+	ImGui::DragFloat2("position", &position_.x, 1.0f);
+	ImGui::DragFloat2("size", &size_.x, 1.0f);
+	ImGui::ColorEdit4("color", &material_->color.x);
+	ImGui::End();
+	SetSize(size_.x, size_.y);
+	SetPosition(position_);
 }
 
 void Sprite::Draw() {

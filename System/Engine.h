@@ -7,6 +7,7 @@
 #include "Vector4.h"
 
 #include <memory>
+#include <string>
 
 #include "Transform.h"
 #include "Matrix4x4.h"
@@ -19,10 +20,10 @@
 class Engine {
 public:
 	//クライアント領域(ゲーム画面)のサイズ
-	static const int32_t kClientWidth = 1280;
-	static const int32_t kClientHeight = 720;
+	static const int32_t kClientWidth = WinApp::kWindowWidth;
+	static const int32_t kClientHeight = WinApp::kWindowHeight;
 
-	void Initialize();
+	void Initialize(std::wstring windowTitle = L"LE2A_04_コバヤシ_マサト_CG2");
 	void Finalize();
 
 	bool ProcessMessage();
@@ -55,7 +56,7 @@ public:
 
 	DirectXCommon* GetDirectXCommon() const { return directXCommon_.get(); }
 
-	WinApp* GetWinApp() const { return winApp_.get(); }
+	HWND GetHWND() const { return winApp_->GetHWND(); }
 
 private:
 	std::shared_ptr<WinApp> winApp_;
@@ -102,6 +103,6 @@ private:
 	/// <summary>
 	/// 三角形のリソースを生成
 	/// </summary>
-	void CreateTriangleResource();
+	void InitializeLightAndViewport();
 };
 

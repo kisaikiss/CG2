@@ -6,15 +6,15 @@
 #include <cstdint>
 #include <Matrix4x4.h>
 #include <Transform.h>
-#include "DirectXCommon.h"
 
+class Engine;
 class Camera;
 
 class Triangle {
 public:
 	static int32_t triangleNum;
 
-	Triangle(DirectXCommon* dxCommon);
+	Triangle(Engine* engine);
 	~Triangle();
 
 	void Update();

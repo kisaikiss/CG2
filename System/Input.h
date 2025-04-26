@@ -3,7 +3,7 @@
 #include<array>
 #include <wrl/client.h>
 #include <vector>
-#include <WinApp.h>
+#include <Windows.h>
 
 enum MouseButton {
 	Left = 0,
@@ -17,7 +17,7 @@ enum MouseButton {
 class Input {
 public:
 
-	void Initialize(WinApp* winApp);
+	void Initialize(HWND hwnd);
 	void Update();
 	/// <summary>
 	/// マウスの押下をチェック
@@ -66,7 +66,7 @@ private:
 	GameInputMouseState preMouseState_;
 	std::vector<GameInputKeyState> keyStates_;
 
-	WinApp* winApp_ = nullptr;
+	HWND hwnd_ = nullptr;
 
 	//キーの数
 	static inline const uint16_t kKeyNum = 256;

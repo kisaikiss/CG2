@@ -4,13 +4,16 @@
 #include <cassert>
 #include <MatrixCalculations.h>
 #include <DirectXUtils.h>
+#include <Log.h>
+#include <ConvertString.h>
 #include "Camera.h"
+#include "Engine.h"
 
 #include "imgui.h"
 #include "imgui_impl_dx12.h"
 #include "imgui_impl_win32.h"
 
-ModelData LoadObjFile(const std::string& directoryPath, const std::string& filename) {
+ModelData Model::LoadObjFile(const std::string& directoryPath, const std::string& filename) {
 #pragma region 1.中で必要となる変数の宣言
 	ModelData modelData;
 	std::vector<Vector4> positions;	//位置
@@ -20,9 +23,11 @@ ModelData LoadObjFile(const std::string& directoryPath, const std::string& filen
 #pragma endregion
 
 #pragma region 2.ファイルを開く
-	std::string filePath = directoryPath + "/" + filename;
+	const std::string filePath = directoryPath + "/" + filename;
+	modelData.name = filePath;
 	std::ifstream file(filePath);
 	assert(file.is_open());
+	Logger::Log("Obj File Opened, path:" + filePath + "\n");
 #pragma endregion
 
 #pragma region 3.実際にファイルを読み ModelDataを構築していく
@@ -88,16 +93,17 @@ ModelData LoadObjFile(const std::string& directoryPath, const std::string& filen
 
 }
 
-MaterialData LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename) {
+MaterialData Model::LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename) {
 #pragma region 1.中で必要となる変数の宣言
 	MaterialData materialData;
 	std::string line;
 #pragma endregion
 
 #pragma region 2.ファイルを開く
-	std::string filePath = directoryPath + "/" + filename;
+	const std::string filePath = directoryPath + "/" + filename;
 	std::ifstream file(filePath);
 	assert(file.is_open());
+	Logger::Log("Material File Opened, path:" + filePath + "\n");
 #pragma endregion
 
 #pragma region 3.実際にファイルを読みMatrialDataを構築していく
@@ -121,26 +127,29 @@ MaterialData LoadMaterialTemplateFile(const std::string& directoryPath, const st
 
 int32_t Model::modelNum = 1;
 
-Model::Model(DirectXCommon* dxCommon, const std::string& directoryPath, const std::string& filename) {
+Model::Model(Engine* engine, const std::string& directoryPath, const std::string& filename) {
 	myNumber_ = modelNum;
 	modelNum++;
-	commandList_ = dxCommon->GetCommandList();
-	device_ = dxCommon->GetDevice();
-	textureSystem_ = dxCommon->GetTextureSystem();
+	commandList_ = engine->GetCommandList();
+	device_ = engine->GetDevice();
+	textureSystem_ = engine->GetTextureSystem();
 	//モデル読み込み
-	modelData_ = LoadObjFile(directoryPath, filename);
+	myModelName_ = filename;
+	if (modelDatas_[filename].name != directoryPath + "/" + filename) {
+		modelDatas_[myModelName_] = LoadObjFile(directoryPath, filename);
+	}
 	// 頂点リソース
-	vertexResource_ = CreateBufferResource(device_, sizeof(VertexData) * modelData_.vertices.size());
+	vertexResource_ = CreateBufferResource(device_, sizeof(VertexData) * modelDatas_[myModelName_].vertices.size());
 	//リソースの先頭のアドレスから使う
 	vertexBufferView_.BufferLocation = vertexResource_->GetGPUVirtualAddress();
 	//使用するリソースのサイズ
-	vertexBufferView_.SizeInBytes = UINT(sizeof(VertexData) * modelData_.vertices.size());
+	vertexBufferView_.SizeInBytes = UINT(sizeof(VertexData) * modelDatas_[myModelName_].vertices.size());
 	//1頂点あたりのサイズ
 	vertexBufferView_.StrideInBytes = sizeof(VertexData);
 
 	//頂点リソースにデータを書き込む
 	vertexResource_->Map(0, nullptr, reinterpret_cast<void**>(&vertexData_));
-	std::memcpy(vertexData_, modelData_.vertices.data(), sizeof(VertexData) * modelData_.vertices.size());
+	std::memcpy(vertexData_, modelDatas_[myModelName_].vertices.data(), sizeof(VertexData) * modelDatas_[myModelName_].vertices.size());
 
 	//IndexResource
 	indexResource_ = CreateBufferResource(device_, sizeof(uint32_t) * 6);
@@ -183,7 +192,7 @@ Model::Model(DirectXCommon* dxCommon, const std::string& directoryPath, const st
 		{0.0f,0.0f,0.0f}
 	};
 	//テクスチャ読み込み
-	textureNum_ = textureSystem_->Lord(modelData_.material.textureFilePath);
+	textureNum_ = textureSystem_->Lord(modelDatas_[myModelName_].material.textureFilePath);
 }
 
 Model::~Model() {
@@ -202,7 +211,7 @@ void Model::Update() {
 	ImGui::DragFloat3("position", &transform_.translate.x, 0.01f);
 	ImGui::DragFloat3("rotate", &transform_.rotate.x, 0.01f);
 	ImGui::DragFloat3("scale", &transform_.scale.x, 0.01f);
-	ImGui::ColorEdit3("color", &material_->color.x);
+	ImGui::ColorEdit4("color", &material_->color.x);
 	ImGui::DragFloat3("uvPosition", &uvTransform_.translate.x, 0.01f);
 	ImGui::DragFloat3("uvRotate", &uvTransform_.rotate.x, 0.01f);
 	ImGui::DragFloat3("uvScale", &uvTransform_.scale.x, 0.01f);
@@ -226,5 +235,32 @@ void Model::Draw(const Camera& camera) {
 	commandList_->SetGraphicsRootDescriptorTable(2,textureSystem_->GetTextureSrvHandleGpu(textureNum_));
 	commandList_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	//commandList_->DrawIndexedInstanced(UINT(modelData_.vertices.size()), 1, 0, 0, 0);
-	commandList_->DrawInstanced(UINT(modelData_.vertices.size()), 1, 0, 0);
+	commandList_->DrawInstanced(UINT(modelDatas_[myModelName_].vertices.size()), 1, 0, 0);
+}
+
+void Model::Draw(const Camera& camera, Transforms transform) {
+	Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
+	Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, camera.GetVeiwProjectionMatrix());
+	transformationData_->WVP = worldViewProjectionMatrix;
+	transformationData_->World = worldMatrix;
+
+	Matrix4x4 uvTransformMatrix = MakeAffineMatrix(uvTransform_.scale, uvTransform_.rotate, uvTransform_.translate);
+	material_->uvTransform = uvTransformMatrix;
+
+	commandList_->IASetVertexBuffers(0, 1, &vertexBufferView_);//VBVを設定
+	//commandList_->IASetIndexBuffer(&indexBufferView_);//IBVを設定
+	//wvp用CBufferの場所を指定
+	commandList_->SetGraphicsRootConstantBufferView(1, transformationResource_->GetGPUVirtualAddress());
+	commandList_->SetGraphicsRootConstantBufferView(0, materialResource_->GetGPUVirtualAddress());
+	commandList_->SetGraphicsRootDescriptorTable(2, textureSystem_->GetTextureSrvHandleGpu(textureNum_));
+	commandList_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	//commandList_->DrawIndexedInstanced(UINT(modelData_.vertices.size()), 1, 0, 0, 0);
+	commandList_->DrawInstanced(UINT(modelDatas_[myModelName_].vertices.size()), 1, 0, 0);
+}
+
+void Model::UnLoadObjFile(const std::string& directoryPath, const std::string& filename) {
+	auto it = modelDatas_.find(directoryPath + "/" + filename);
+	if (it != modelDatas_.end()) {
+		modelDatas_.erase(it);
+	}
 }

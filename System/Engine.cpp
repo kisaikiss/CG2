@@ -83,9 +83,9 @@ IDxcBlob* CompileShader(
 
 }
 
-void Engine::Initialize() {
+void Engine::Initialize(std::wstring windowTitle) {
 	winApp_ = std::make_shared<WinApp>();
-	winApp_->Create(L"LE2A_04_コバヤシ_マサト_CG2", L"CG2WindowClass", kClientWidth, kClientHeight);
+	winApp_->Create(windowTitle, L"CG2WindowClass", kClientWidth, kClientHeight);
 
 	directXCommon_ = std::make_shared<DirectXCommon>();
 	directXCommon_->Initialize(winApp_.get());
@@ -96,7 +96,7 @@ void Engine::Initialize() {
 
 	CreatePSO();
 
-	CreateTriangleResource();
+	InitializeLightAndViewport();
 }
 
 void Engine::Finalize() {
@@ -215,6 +215,14 @@ void Engine::CreatePSO() {
 	//全ての色要素を書き込む
 	blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
 
+	//AlphaBlendを有効化する
+	/*blendDesc.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
+	blendDesc.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
+	blendDesc.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
+	blendDesc.RenderTarget[0].BlendEnable = true;
+	blendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+	blendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
+	blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;*/
 	//RasterizerState(Rasterizerに対する設定)の設定
 	D3D12_RASTERIZER_DESC rasterizerDesc{};
 	//裏面(時計回り)を表示しない
@@ -264,7 +272,7 @@ void Engine::CreatePSO() {
 
 }
 
-void Engine::CreateTriangleResource() {
+void Engine::InitializeLightAndViewport() {
 
 	//光源
 	directionalLightResource_ = CreateBufferResource(directXCommon_->GetDevice(), sizeof(DirectionalLight));

@@ -67,11 +67,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	uint32_t soundNum = audio->SoundLoadWave("resources/Alarm01.wav");
 	audio->SoundPlayWave(soundNum);
 	
-	Sphere* sphere = new Sphere(engine->GetDirectXCommon());
-	Triangle* triangle1 = new Triangle(engine->GetDirectXCommon());
+	Sphere* sphere = new Sphere(engine);
+	Triangle* triangle1 = new Triangle(engine);
 	Camera* camera = new Camera();
-	Sprite* sprite = new Sprite(engine->GetDirectXCommon(),"resources/uvChecker.png");
-	Model* model = new Model(engine->GetDirectXCommon(),"resources","player.obj");
+	Sprite* sprite = new Sprite(engine,"resources/uvChecker.png");
+	Model* model = new Model(engine,"resources","player.obj");
+	Model* debugModel = new Model(engine, "resources", "player.obj");
+	Transforms transform{};
+	transform.scale = { -1.05f,1.05f,1.05f };
+	debugModel->SetColor({ 0.f, 0.f, 0.f, 1.f });
+	debugModel->SetTransform(transform);
 	Input* input = new Input();
 	DebugCamera* debugCamera = new DebugCamera(input);
 
@@ -79,7 +84,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	bool isDebugCamera = false;
 
-	input->Initialize(engine->GetWinApp());
+	input->Initialize(engine->GetHWND());
 
 	//ウィンドウのxボタンが押されるまでループ
 	while (engine->ProcessMessage() == 0) {
@@ -94,8 +99,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		sphere->Update();
 		triangle1->Update();
 		model->Update();
-		
-		
+		debugModel->Update();
+		sprite->Update();
 
 		if (input->GetPressingCount('0') == 1) {
 			if (isDebugCamera == true) {
@@ -126,7 +131,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		triangle1->Draw(*rialCamera);
 		sphere->Draw(*rialCamera);
 		model->Draw(*rialCamera);
-
+		debugModel->Draw(*rialCamera, transform);
 		Vector2 pos = { 2.f,3.f };
 		Vector2 size = { 100.f,500.f };
 
@@ -144,6 +149,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	delete camera;
 	delete debugCamera;
 	delete model;
+	delete debugModel;
 	delete input;
 	engine->Finalize();
 	delete engine;

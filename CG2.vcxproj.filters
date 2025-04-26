@@ -49,6 +49,12 @@
     <Filter Include="ソース ファイル\System\Utils">
       <UniqueIdentifier>{535912f4-15a4-4662-9d78-f93a63fbb5d1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ソース ファイル\System\Graphics">
+      <UniqueIdentifier>{e2f742b3-d0e7-4c93-b286-ee57ef84b0bc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\System\Audio">
+      <UniqueIdentifier>{d7cab5dc-4698-40b1-89b5-36ccf2778de5}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -129,8 +135,11 @@
     <ClCompile Include="System\Log.cpp">
       <Filter>ソース ファイル\System\Utils</Filter>
     </ClCompile>
+    <ClCompile Include="System\GraphicsPipelineStateManager.cpp">
+      <Filter>ソース ファイル\System\Graphics</Filter>
+    </ClCompile>
     <ClCompile Include="Audio\Audio.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ソース ファイル\System\Audio</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -242,8 +251,11 @@
     <ClInclude Include="System\Log.h">
       <Filter>ソース ファイル\System\Utils</Filter>
     </ClInclude>
+    <ClInclude Include="System\GraphicsPipelineStateManager.h">
+      <Filter>ソース ファイル\System\Graphics</Filter>
+    </ClInclude>
     <ClInclude Include="Audio\Audio.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>ソース ファイル\System\Audio</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

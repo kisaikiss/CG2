@@ -1,11 +1,11 @@
 #include "Input.h"
 #include <cassert>
 
-void Input::Initialize(WinApp* winApp) {
-	if (winApp == nullptr) {
+void Input::Initialize(HWND hwnd) {
+	if (hwnd == nullptr) {
 		assert(0);
 	}
-	winApp_ = winApp;
+	hwnd_ = hwnd;
 	result_ = GameInputCreate(input_.GetAddressOf());
 	assert(SUCCEEDED(result_));
 }
@@ -102,7 +102,7 @@ bool Input::GetMousePosition(int* mouseX, int* mouseY) {
 		// スクリーンを座標系からウィンドウ座標に変換
 		POINT cursorPos;
 		GetCursorPos(&cursorPos); // スクリーンを得る
-		ScreenToClient(winApp_->GetHWND(), &cursorPos); // ウィンドウ座標に変換
+		ScreenToClient(hwnd_, &cursorPos); // ウィンドウ座標に変換
 
 		*mouseX = static_cast<int>(cursorPos.x);
 		*mouseY = static_cast<int>(cursorPos.y);

@@ -6,33 +6,57 @@
 #include <cstdint>
 #include <Matrix4x4.h>
 #include <Transform.h>
+#include <map>
 
 #include "TextureSystem.h"
 #include "Material.h"
 #include "MaterialData.h"
 #include "TransformationMatrix.h"
-#include "DirectXCommon.h"
 #include <wrl.h>
 #include <string>
 
 class Camera;
-
-ModelData LoadObjFile(const std::string& directoryPath, const std::string& filename);
-
-MaterialData LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename);
+class Engine;
 
 class Model {
 public:
 	static int32_t modelNum;
 
-	Model(DirectXCommon* dxCommon, const std::string& directoryPath, const std::string& filename);
+	Model(Engine* engine, const std::string& directoryPath, const std::string& filename);
 	~Model();
 
+	/// <summary>
+	/// 更新処理(ImGui用)
+	/// </summary>
 	void Update();
+
+	/// <summary>
+	/// 描画
+	/// </summary>
+	/// <param name="camera"></param>
 	void Draw(const Camera& camera);
+
+	/// <summary>
+	/// SRTを指定して描画
+	/// </summary>
+	/// <param name="camera"></param>
+	/// <param name="transform"></param>
+	void Draw(const Camera& camera, Transforms transform);
+
+	void SetTransform(const Transforms& transform) { transform_ = transform; }
+
+	void SetColor(const Vector4& color) { material_->color = color; }
+
+	/// <summary>
+	/// 使わないモデルデータを解放する
+	/// </summary>
+	/// <param name="directoryPath"></param>
+	/// <param name="filename"></param>
+	void UnLoadObjFile(const std::string& directoryPath, const std::string& filename);
+
 private:
 	//モデルデータ
-	ModelData modelData_{};
+	//ModelData modelData_{};
 	//コマンドリスト(まとまった命令群)
 	ID3D12GraphicsCommandList* commandList_ = nullptr;
 	//デバイス
@@ -64,5 +88,12 @@ private:
 	uint32_t textureNum_;
 
 	int32_t myNumber_{};
+	std::string myModelName_{};
+	static inline std::map<std::string, ModelData> modelDatas_;
+
+	ModelData LoadObjFile(const std::string& directoryPath, const std::string& filename);
+
+	MaterialData LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename);
+
 };
 

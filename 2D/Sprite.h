@@ -9,12 +9,18 @@
 #include "TextureSystem.h"
 #include "Material.h"
 #include "TransformationMatrix.h"
-#include "DirectXCommon.h"
+
+class Engine;
 
 class Sprite {
 public:
-	Sprite(DirectXCommon* dxCommon, const std::string& fileName);
+	Sprite(Engine* engine, const std::string& fileName);
 	~Sprite();
+
+	/// <summary>
+	/// 更新処理(ImGui用)
+	/// </summary>
+	void Update();
 
 	/// <summary>
 	/// スプライトを描画する

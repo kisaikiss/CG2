@@ -125,6 +125,7 @@ copy "$(windowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="System\Engine.cpp" />
     <ClCompile Include="System\DirectXCommon.cpp" />
     <ClCompile Include="System\DirectXUtils.cpp" />
+    <ClCompile Include="System\GraphicsPipelineStateManager.cpp" />
     <ClCompile Include="System\Input.cpp" />
     <ClCompile Include="System\Log.cpp" />
     <ClCompile Include="System\TextureSystem.cpp" />
@@ -162,6 +163,7 @@ copy "$(windowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="System\Engine.h" />
     <ClInclude Include="System\DirectXCommon.h" />
     <ClInclude Include="System\DirectXUtils.h" />
+    <ClInclude Include="System\GraphicsPipelineStateManager.h" />
     <ClInclude Include="System\Input.h" />
     <ClInclude Include="System\Log.h" />
     <ClInclude Include="System\MaterialData.h" />

@@ -7,6 +7,7 @@
 #include "DirectXUtils.h"
 #include <MatrixCalculations.h>
 #include "Camera.h"
+#include "Engine.h"
 
 #include "imgui.h"
 #include "imgui_impl_dx12.h"
@@ -14,15 +15,15 @@
 
 int32_t Sphere::sphereNum = 1;
 
-Sphere::Sphere(DirectXCommon* dxCommon) {
-	if (dxCommon == nullptr) {
+Sphere::Sphere(Engine* engine) {
+	if (engine == nullptr) {
 		assert(0);
 	}
 	myNumber_ = sphereNum;
 	sphereNum++;
-	commandList_ = dxCommon->GetCommandList();
-	device_ = dxCommon->GetDevice();
-	textureSystem_ = dxCommon->GetTextureSystem();
+	commandList_ = engine->GetCommandList();
+	device_ = engine->GetDevice();
+	textureSystem_ = engine->GetTextureSystem();
 	numberOfVertex_ = kSubdivision * kSubdivision * 4;
 	numberOfIndex_ = kSubdivision * kSubdivision * 6;
 

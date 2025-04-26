@@ -5,6 +5,7 @@
 #include "DirectXUtils.h"
 #include <MatrixCalculations.h>
 #include "Camera.h"
+#include "Engine.h"
 
 #include "imgui.h"
 #include "imgui_impl_dx12.h"
@@ -13,14 +14,14 @@
 
 int32_t Triangle::triangleNum = 1;
 
-Triangle::Triangle(DirectXCommon* dxCommon) {
-	if (dxCommon == nullptr) {
+Triangle::Triangle(Engine* engine) {
+	if (engine == nullptr) {
 		assert(0);
 	}
 	myNumber_ = triangleNum;
 	triangleNum++;
-	commandList_ = dxCommon->GetCommandList();
-	device_ = dxCommon->GetDevice();
+	commandList_ = engine->GetCommandList();
+	device_ = engine->GetDevice();
 	vertexResource_ = CreateBufferResource(device_, sizeof(VertexData) * 3);
 	//リソースの先頭のアドレスから使う
 	vertexBufferView_.BufferLocation = vertexResource_->GetGPUVirtualAddress();

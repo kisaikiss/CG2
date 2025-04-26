@@ -8,15 +8,15 @@
 #include "TextureSystem.h"
 #include "Material.h"
 #include "TransformationMatrix.h"
-#include "DirectXCommon.h"
 
 class Camera;
+class Engine;
 
 class Sphere {
 public:
 	static int32_t sphereNum;
 
-	Sphere(DirectXCommon* dxCommon);
+	Sphere(Engine* engine);
 	~Sphere();
 
 	void Update();
