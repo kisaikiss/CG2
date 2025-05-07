@@ -12,6 +12,7 @@
 #include "Material.h"
 #include "MaterialData.h"
 #include "TransformationMatrix.h"
+#include "GraphicsPipelineStateManager.h"
 #include <wrl.h>
 #include <string>
 
@@ -35,6 +36,8 @@ public:
 	/// </summary>
 	/// <param name="camera"></param>
 	void Draw(const Camera& camera);
+
+	void DrawWithOutline(const Camera& camera);
 
 	/// <summary>
 	/// SRTを指定して描画
@@ -61,6 +64,8 @@ private:
 	ID3D12GraphicsCommandList* commandList_ = nullptr;
 	//デバイス
 	ID3D12Device* device_ = nullptr;
+	//PSOマネージャー
+	GraphicsPipelineStateManager* graphicsPipelineStateManager_ = nullptr;
 	//リソース
 	ID3D12Resource* vertexResource_ = nullptr;
 	ID3D12Resource* indexResource_ = nullptr;
@@ -78,6 +83,16 @@ private:
 	uint32_t* indexData_ = nullptr;
 	//マテリアル
 	Material* material_ = nullptr;
+
+	//Outline用
+	ID3D12Resource* transformationOutlineResource_ = nullptr;
+	ID3D12Resource* materialOutlineResource_ = nullptr;
+	//wvpデータ
+	TransformationMatrix* transformationOutlineData_ = nullptr;
+	//マテリアル
+	Material* materialOutline_ = nullptr;
+
+	Vector4 color_{};
 	//SRT
 	Transforms transform_{};
 	//uvTransform
@@ -94,6 +109,8 @@ private:
 	ModelData LoadObjFile(const std::string& directoryPath, const std::string& filename);
 
 	MaterialData LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename);
+
+	void DrawOutline(const Camera& camera);
 
 };
 

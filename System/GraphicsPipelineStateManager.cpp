@@ -30,5 +30,6 @@ ID3D12PipelineState* GraphicsPipelineStateManager::GetPipelineState(const std::s
 		return it->second.Get();
 	}
 	Logger::Log("Pipeline state not found: " + key);
+	assert(false);
 	return nullptr;
 }

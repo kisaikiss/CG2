@@ -92,6 +92,8 @@ void Engine::Initialize(std::wstring windowTitle) {
 
 	textureSystem_ = directXCommon_->GetTextureSystem();
 
+	graphicsPipelineStateManager_ = std::make_shared<GraphicsPipelineStateManager>(directXCommon_->GetDevice());
+
 	InitializeDirectXCompiler();
 
 	CreatePSO();
@@ -101,7 +103,6 @@ void Engine::Initialize(std::wstring windowTitle) {
 
 void Engine::Finalize() {
 	directionalLightResource_->Release();
-	graphicsPipelineState_->Release();
 	signatureBlob_->Release();
 	if (errorBlob_) {
 		errorBlob_->Release();
@@ -267,8 +268,15 @@ void Engine::CreatePSO() {
 	graphicsPipelineStateDesc.SampleDesc.Count = 1;
 	graphicsPipelineStateDesc.SampleMask = D3D12_DEFAULT_SAMPLE_MASK;
 	// 実際に生成
-	hr = directXCommon_->GetDevice()->CreateGraphicsPipelineState(&graphicsPipelineStateDesc, IID_PPV_ARGS(&graphicsPipelineState_));
-	assert(SUCCEEDED(hr));
+	graphicsPipelineStateManager_->Create("Object3dPSO", graphicsPipelineStateDesc);
+
+	outlineVertexShaderBlob_ = CompileShader(L"Outline3d.VS.hlsl", L"vs_6_0", dxcUtils_, dxcCompiler_, includeHandler_);
+	assert(outlineVertexShaderBlob_ != nullptr);
+
+	rasterizerDesc.CullMode = D3D12_CULL_MODE_FRONT;	//Outline用のPSOを生成する
+	graphicsPipelineStateDesc.RasterizerState = rasterizerDesc;
+	graphicsPipelineStateDesc.VS = { outlineVertexShaderBlob_->GetBufferPointer(), outlineVertexShaderBlob_->GetBufferSize() }; // VertexShader
+	graphicsPipelineStateManager_->Create("Outline", graphicsPipelineStateDesc);
 
 }
 
@@ -321,7 +329,7 @@ void Engine::PreDraw() {
 	directXCommon_->GetCommandList()->RSSetScissorRects(1, &scissorRect_);//Scirssorを設定
 	//RootSignatureを設定。PSOに設定しているけど別途設定が必要
 	directXCommon_->GetCommandList()->SetGraphicsRootSignature(rootSignature_);
-	directXCommon_->GetCommandList()->SetPipelineState(graphicsPipelineState_);	//PSOを設定
+	directXCommon_->GetCommandList()->SetPipelineState(graphicsPipelineStateManager_->GetPipelineState("Object3dPSO"));	//PSOを設定
 	//SRVのディスクリプタテーブルの先頭を設定。2はルートパラメータ[2]
 	directXCommon_->GetCommandList()->SetGraphicsRootDescriptorTable(2, directXCommon_->GetTextureSystem()->GetTextureSrvHandleGpu(0));
 	//光源のコマンドを積む

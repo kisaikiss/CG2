@@ -90,7 +90,9 @@ void DirectXCommon::PreDraw() {
 	//ImGuiのために描画用DescriptorHeapを設定
 	ID3D12DescriptorHeap* descriptorHeaps[] = { srvDescriptorHeap_};
 	commandList_->SetDescriptorHeaps(1, descriptorHeaps);
+	commandList_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	// 画面に描く処理はすべて終わり、画面に映すので、状態を遷移
+
 }
 
 void DirectXCommon::PostDraw() {

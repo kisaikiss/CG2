@@ -133,6 +133,7 @@ Model::Model(Engine* engine, const std::string& directoryPath, const std::string
 	commandList_ = engine->GetCommandList();
 	device_ = engine->GetDevice();
 	textureSystem_ = engine->GetTextureSystem();
+	graphicsPipelineStateManager_ = engine->GetGraphicsPipelineStateManager();
 	//モデル読み込み
 	myModelName_ = filename;
 	if (modelDatas_[filename].name != directoryPath + "/" + filename) {
@@ -180,7 +181,8 @@ Model::Model(Engine* engine, const std::string& directoryPath, const std::string
 	//書き込むためのアドレスを取得
 	materialResource_->Map(0, nullptr, reinterpret_cast<void**>(&material_));
 	//今回は白を書き込んでみる
-	material_->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+	color_ = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+	material_->color = color_;
 	//Lightingを有効にする
 	material_->enableLighting = true;
 	//単位行列を書き込んでおく
@@ -193,6 +195,25 @@ Model::Model(Engine* engine, const std::string& directoryPath, const std::string
 	};
 	//テクスチャ読み込み
 	textureNum_ = textureSystem_->Lord(modelDatas_[myModelName_].material.textureFilePath);
+
+
+	//Outline用のResource
+	//transformation用のリソースを作る。TransformationMatrix 1つ分のサイズを用意する
+	transformationOutlineResource_ = CreateBufferResource(device_, sizeof(TransformationMatrix));
+	//データを書き込む
+	//書き込むためのアドレスを取得
+	transformationOutlineResource_->Map(0, nullptr, reinterpret_cast<void**>(&transformationOutlineData_));
+	//単位行列を書き込んでおく
+	transformationOutlineData_->WVP = MakeIdentity4x4();
+	transformationOutlineData_->World = MakeIdentity4x4();
+	// マテリアル用のリソースを作る。今回はcolor一つ分のサイズを用意
+	materialOutlineResource_ = CreateBufferResource(device_, sizeof(Material));
+	//マテリアルにデータを書き込む
+	//書き込むためのアドレスを取得
+	materialOutlineResource_->Map(0, nullptr, reinterpret_cast<void**>(&materialOutline_));
+	//今回は黒を書き込んでみる
+	//color_ = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+	materialOutline_->color = Vector4(0.0f, 0.0f, 0.0f, 1.0f);
 }
 
 Model::~Model() {
@@ -200,6 +221,9 @@ Model::~Model() {
 	transformationResource_->Release();
 	indexResource_->Release();
 	materialResource_->Release();
+
+	transformationOutlineResource_->Release();
+	materialOutlineResource_->Release();
 }
 
 void Model::Update() {
@@ -211,7 +235,7 @@ void Model::Update() {
 	ImGui::DragFloat3("position", &transform_.translate.x, 0.01f);
 	ImGui::DragFloat3("rotate", &transform_.rotate.x, 0.01f);
 	ImGui::DragFloat3("scale", &transform_.scale.x, 0.01f);
-	ImGui::ColorEdit4("color", &material_->color.x);
+	ImGui::ColorEdit4("color", &color_.x);
 	ImGui::DragFloat3("uvPosition", &uvTransform_.translate.x, 0.01f);
 	ImGui::DragFloat3("uvRotate", &uvTransform_.rotate.x, 0.01f);
 	ImGui::DragFloat3("uvScale", &uvTransform_.scale.x, 0.01f);
@@ -226,7 +250,9 @@ void Model::Draw(const Camera& camera) {
 
 	Matrix4x4 uvTransformMatrix = MakeAffineMatrix(uvTransform_.scale, uvTransform_.rotate, uvTransform_.translate);
 	material_->uvTransform = uvTransformMatrix;
+	material_->color = color_;
 
+	commandList_->SetPipelineState(graphicsPipelineStateManager_->GetPipelineState("Object3dPSO"));
 	commandList_->IASetVertexBuffers(0, 1, &vertexBufferView_);//VBVを設定
 	//commandList_->IASetIndexBuffer(&indexBufferView_);//IBVを設定
 	//wvp用CBufferの場所を指定
@@ -246,7 +272,9 @@ void Model::Draw(const Camera& camera, Transforms transform) {
 
 	Matrix4x4 uvTransformMatrix = MakeAffineMatrix(uvTransform_.scale, uvTransform_.rotate, uvTransform_.translate);
 	material_->uvTransform = uvTransformMatrix;
+	material_->color = color_;
 
+	commandList_->SetPipelineState(graphicsPipelineStateManager_->GetPipelineState("Object3dPSO"));
 	commandList_->IASetVertexBuffers(0, 1, &vertexBufferView_);//VBVを設定
 	//commandList_->IASetIndexBuffer(&indexBufferView_);//IBVを設定
 	//wvp用CBufferの場所を指定
@@ -257,6 +285,34 @@ void Model::Draw(const Camera& camera, Transforms transform) {
 	//commandList_->DrawIndexedInstanced(UINT(modelData_.vertices.size()), 1, 0, 0, 0);
 	commandList_->DrawInstanced(UINT(modelDatas_[myModelName_].vertices.size()), 1, 0, 0);
 }
+
+
+void Model::DrawOutline(const Camera& camera) {
+	Transforms transform = transform_;
+	//transform.scale = transform.scale * 1.05f;
+	Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
+	Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, camera.GetVeiwProjectionMatrix());
+	transformationOutlineData_->WVP = worldViewProjectionMatrix;
+	transformationOutlineData_->World = worldMatrix;
+	commandList_->SetPipelineState(graphicsPipelineStateManager_->GetPipelineState("Outline"));
+	commandList_->IASetVertexBuffers(0, 1, &vertexBufferView_);//VBVを設定
+	//commandList_->IASetIndexBuffer(&indexBufferView_);//IBVを設定
+	//wvp用CBufferの場所を指定
+	commandList_->SetGraphicsRootConstantBufferView(1, transformationOutlineResource_->GetGPUVirtualAddress());
+	commandList_->SetGraphicsRootConstantBufferView(0, materialOutlineResource_->GetGPUVirtualAddress());
+	commandList_->SetGraphicsRootDescriptorTable(2, textureSystem_->GetTextureSrvHandleGpu(textureNum_));
+	commandList_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	//commandList_->DrawIndexedInstanced(UINT(modelData_.vertices.size()), 1, 0, 0, 0);
+	commandList_->DrawInstanced(UINT(modelDatas_[myModelName_].vertices.size()), 1, 0, 0);
+}
+
+
+void Model::DrawWithOutline(const Camera& camera) {
+	
+	Draw(camera);
+	DrawOutline(camera);
+}
+
 
 void Model::UnLoadObjFile(const std::string& directoryPath, const std::string& filename) {
 	auto it = modelDatas_.find(directoryPath + "/" + filename);

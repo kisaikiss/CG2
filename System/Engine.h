@@ -13,6 +13,7 @@
 #include "Matrix4x4.h"
 #include "DirectionalLight.h"
 #include "TransformationMatrix.h"
+#include "GraphicsPipelineStateManager.h"
 
 
 #pragma comment(lib,"dxcompiler.lib")
@@ -54,6 +55,12 @@ public:
 	/// <returns></returns>
 	TextureSystem* GetTextureSystem() const { return textureSystem_; }
 
+	/// <summary>
+	/// PSOマネージャを取得
+	/// </summary>
+	/// <returns></returns>
+	GraphicsPipelineStateManager* GetGraphicsPipelineStateManager() const { return graphicsPipelineStateManager_.get(); }
+
 	DirectXCommon* GetDirectXCommon() const { return directXCommon_.get(); }
 
 	HWND GetHWND() const { return winApp_->GetHWND(); }
@@ -61,6 +68,7 @@ public:
 private:
 	std::shared_ptr<WinApp> winApp_;
 	std::shared_ptr<DirectXCommon> directXCommon_;
+	std::shared_ptr<GraphicsPipelineStateManager> graphicsPipelineStateManager_;
 	//DXC関連
 	IDxcUtils* dxcUtils_ = nullptr;
 	IDxcCompiler3* dxcCompiler_ = nullptr;
@@ -75,13 +83,14 @@ private:
 
 	ID3D12RootSignature* rootSignature_ = nullptr;
 
-	ID3D12PipelineState* graphicsPipelineState_ = nullptr;
+	//ID3D12PipelineState* graphicsPipelineState_ = nullptr;
 
 	// 頂点バッファビューを作成
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferView_{};
 	//Shaderをコンパイルする
 	IDxcBlob* vertexShaderBlob_ = nullptr;
 	IDxcBlob* pixelShaderBlob_ = nullptr;
+	Microsoft::WRL::ComPtr<IDxcBlob> outlineVertexShaderBlob_ = nullptr;
 
 	//テクスチャのシステム
 	TextureSystem* textureSystem_ = nullptr;
