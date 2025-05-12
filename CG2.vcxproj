@@ -112,6 +112,8 @@ copy "$(windowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="externals\imgui\imgui_tables.cpp" />
     <ClCompile Include="externals\imgui\imgui_widgets.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Math\Collisions.cpp" />
+    <ClCompile Include="Math\Easing.cpp" />
     <ClCompile Include="Math\MatrixCalculations.cpp" />
     <ClCompile Include="Math\Vector3.cpp" />
     <ClCompile Include="Math\VectorCalculations.cpp" />
@@ -128,6 +130,7 @@ copy "$(windowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="System\GraphicsPipelineStateManager.cpp" />
     <ClCompile Include="System\Input.cpp" />
     <ClCompile Include="System\Log.cpp" />
+    <ClCompile Include="System\MaterialTransformBundle.cpp" />
     <ClCompile Include="System\TextureSystem.cpp" />
     <ClCompile Include="System\WinApp.cpp" />
   </ItemGroup>
@@ -142,7 +145,10 @@ copy "$(windowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="externals\imgui\imstb_rectpack.h" />
     <ClInclude Include="externals\imgui\imstb_textedit.h" />
     <ClInclude Include="externals\imgui\imstb_truetype.h" />
+    <ClInclude Include="Math\AABB.h" />
+    <ClInclude Include="Math\Collisions.h" />
     <ClInclude Include="Math\DirectionalLight.h" />
+    <ClInclude Include="Math\Easing.h" />
     <ClInclude Include="Math\Material.h" />
     <ClInclude Include="Math\Matrix4x4.h" />
     <ClInclude Include="Math\MatrixCalculations.h" />
@@ -167,6 +173,7 @@ copy "$(windowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="System\Input.h" />
     <ClInclude Include="System\Log.h" />
     <ClInclude Include="System\MaterialData.h" />
+    <ClInclude Include="System\MaterialTransformBundle.h" />
     <ClInclude Include="System\ModelData.h" />
     <ClInclude Include="System\TextureSystem.h" />
     <ClInclude Include="System\WinApp.h" />

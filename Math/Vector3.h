@@ -10,5 +10,7 @@ public:
 	Vector3 operator+(const float& scalar) const;
 
 	Vector3 operator*(const float& scalar) const;
+
+	Vector3 operator+=(const Vector3& other);
 };
 

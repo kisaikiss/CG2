@@ -45,7 +45,7 @@ void DebugCamera::Update() {
 		}
 		
 		//移動速度
-		const float kSpeed = 0.1f;
+		const float kSpeed = 0.3f;
 		Vector3 velocity{};
 
 		

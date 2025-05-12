@@ -13,6 +13,7 @@
 #include "DebugCamera.h"
 #include "D3DResourceLeakChecker.h"
 #include "Audio.h"
+#include "MaterialTransformBundle.h"
 
 #include "imgui.h"
 #include "imgui_impl_dx12.h"
@@ -72,7 +73,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Camera* camera = new Camera();
 	Sprite* sprite = new Sprite(engine,"resources/uvChecker.png");
 	Model* model = new Model(engine,"resources/evaluationTaskResources","bunny.obj");
-	Model* debugModel = new Model(engine, "resources", "player.obj");
+	Transforms transform{};
+	transform.scale = Vector3(1.f, 1.f, 1.f);
+	Vector4 color = Vector4(1.f, 1.f, 1.f, 1.f);
+	MaterialTransformBundle* materialTransform = new MaterialTransformBundle(color, transform, engine->GetDevice());
+	model->SetMaterialTransform(materialTransform);
+
 	Input* input = new Input();
 	DebugCamera* debugCamera = new DebugCamera(input);
 
@@ -95,7 +101,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		sphere->Update();
 		triangle1->Update();
 		model->Update();
-		debugModel->Update();
 		sprite->Update();
 
 		if (input->GetPressingCount('0') == 1) {
@@ -132,7 +137,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		sprite->Draw();
 
-		model->DrawWithOutline(*rialCamera);
+		materialTransform->PreDraw(*rialCamera);
+		model->DrawWithOutline();
 		//model->Draw(*rialCamera);
 
 
@@ -148,7 +154,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	delete camera;
 	delete debugCamera;
 	delete model;
-	delete debugModel;
+	delete materialTransform;
 	delete input;
 	engine->Finalize();
 	delete engine;

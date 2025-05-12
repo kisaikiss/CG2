@@ -13,6 +13,7 @@
 #include "MaterialData.h"
 #include "TransformationMatrix.h"
 #include "GraphicsPipelineStateManager.h"
+#include "MaterialTransformBundle.h"
 #include <wrl.h>
 #include <string>
 
@@ -35,20 +36,16 @@ public:
 	/// 描画
 	/// </summary>
 	/// <param name="camera"></param>
-	void Draw(const Camera& camera);
+	void Draw();
 
-	void DrawWithOutline(const Camera& camera);
+	void DrawWithOutline();
 
-	/// <summary>
-	/// SRTを指定して描画
-	/// </summary>
-	/// <param name="camera"></param>
-	/// <param name="transform"></param>
-	void Draw(const Camera& camera, Transforms transform);
 
-	void SetTransform(const Transforms& transform) { transform_ = transform; }
+	void SetTextureNum(uint32_t textureNum) { textureNum_ = textureNum; }
 
-	void SetColor(const Vector4& color) { material_->color = color; }
+	void SetMaterialTransform(MaterialTransformBundle* materialTransform) {
+		materialTransformResource = materialTransform;
+	}
 
 	/// <summary>
 	/// 使わないモデルデータを解放する
@@ -68,35 +65,19 @@ private:
 	GraphicsPipelineStateManager* graphicsPipelineStateManager_ = nullptr;
 	//リソース
 	ID3D12Resource* vertexResource_ = nullptr;
-	ID3D12Resource* indexResource_ = nullptr;
-	ID3D12Resource* transformationResource_ = nullptr;
-	ID3D12Resource* materialResource_ = nullptr;
+	MaterialTransformBundle* materialTransformResource = nullptr;
 	//VBV
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferView_{};
 	//IBV
 	D3D12_INDEX_BUFFER_VIEW indexBufferView_{};
 	//頂点データ
 	VertexData* vertexData_ = nullptr;
-	//wvpデータ
-	TransformationMatrix* transformationData_ = nullptr;
-	//indexデータ
-	uint32_t* indexData_ = nullptr;
-	//マテリアル
-	Material* material_ = nullptr;
 
 	//Outline用
-	ID3D12Resource* transformationOutlineResource_ = nullptr;
 	ID3D12Resource* materialOutlineResource_ = nullptr;
-	//wvpデータ
-	TransformationMatrix* transformationOutlineData_ = nullptr;
 	//マテリアル
 	Material* materialOutline_ = nullptr;
 
-	Vector4 color_{};
-	//SRT
-	Transforms transform_{};
-	//uvTransform
-	Transforms uvTransform_{};
 	//テクスチャのシステム
 	TextureSystem* textureSystem_ = nullptr;
 	//テクスチャ番号
@@ -110,7 +91,7 @@ private:
 
 	MaterialData LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename);
 
-	void DrawOutline(const Camera& camera);
+	void DrawOutline();
 
 };
 

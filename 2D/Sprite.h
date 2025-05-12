@@ -31,6 +31,7 @@ public:
 
 	void SetPosition(const Vector2& position);
 	void SetSize(float width, float height);
+	void SetColor(const Vector4& color);
 private:
 	//コマンドリスト(まとまった命令群)
 	ID3D12GraphicsCommandList* commandList_ = nullptr;

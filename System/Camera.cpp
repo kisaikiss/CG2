@@ -18,12 +18,13 @@ Camera::Camera() {
 }
 
 void Camera::Update() {
+#ifdef _DEBUG
 	ImGui::Begin("camera");
 	ImGui::DragFloat3("position", &transform_.translate.x, 0.01f);
 	ImGui::DragFloat3("rotate", &transform_.rotate.x, 0.01f);
 	ImGui::DragFloat3("scale", &transform_.scale.x, 0.01f);
 	ImGui::End();
-
+#endif // _DEBUG
 	worldMatrix_ = MakeAffineMatrix(transform_.scale, transform_.rotate, transform_.translate);
 	viewMatrix_ = Inverse(worldMatrix_);
 	viewProjectionMatrix_ = Multiply(viewMatrix_, projectionMatrix_);

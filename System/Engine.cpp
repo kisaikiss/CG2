@@ -217,13 +217,13 @@ void Engine::CreatePSO() {
 	blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
 
 	//AlphaBlendを有効化する
-	/*blendDesc.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
+	blendDesc.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
 	blendDesc.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
 	blendDesc.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
 	blendDesc.RenderTarget[0].BlendEnable = true;
 	blendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
 	blendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
-	blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;*/
+	blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
 	//RasterizerState(Rasterizerに対する設定)の設定
 	D3D12_RASTERIZER_DESC rasterizerDesc{};
 	//裏面(時計回り)を表示しない
@@ -312,11 +312,14 @@ bool Engine::ProcessMessage() {
 }
 
 void Engine::UpdateLight() {
+#ifdef _DEBUG
 	ImGui::Begin("Light");
 	ImGui::ColorEdit4("color", &directionalLightData_->color.x);
 	ImGui::DragFloat3("direction", &directionalLightData_->direction.x, 0.1f);
 	ImGui::DragFloat("itensty", &directionalLightData_->intensity, 0.1f);
 	ImGui::End();
+#endif // _DEBUG
+
 	
 	directionalLightData_->direction = Normalize(directionalLightData_->direction);
 }

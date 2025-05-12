@@ -136,3 +136,7 @@ void Sprite::SetSize(float width, float height) {
 	// 右上
 	vertexData_[3].position = { width,0.0f,0.0f,1.0f };
 }
+
+void Sprite::SetColor(const Vector4& color) {
+	material_->color = color;
+}

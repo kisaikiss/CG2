@@ -144,6 +144,15 @@
     <ClCompile Include="Audio\Audio.cpp">
       <Filter>ソース ファイル\System\Audio</Filter>
     </ClCompile>
+    <ClCompile Include="System\MaterialTransformBundle.cpp">
+      <Filter>ソース ファイル\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Math\Collisions.cpp">
+      <Filter>ソース ファイル\Math</Filter>
+    </ClCompile>
+    <ClCompile Include="Math\Easing.cpp">
+      <Filter>ソース ファイル\Math</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="System\DirectXCommon.h">
@@ -259,6 +268,18 @@
     </ClInclude>
     <ClInclude Include="Audio\Audio.h">
       <Filter>ソース ファイル\System\Audio</Filter>
+    </ClInclude>
+    <ClInclude Include="System\MaterialTransformBundle.h">
+      <Filter>ソース ファイル\System</Filter>
+    </ClInclude>
+    <ClInclude Include="Math\AABB.h">
+      <Filter>ソース ファイル\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Math\Collisions.h">
+      <Filter>ソース ファイル\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Math\Easing.h">
+      <Filter>ソース ファイル\Math</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

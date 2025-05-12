@@ -37,30 +37,30 @@ ModelData Model::LoadObjFile(const std::string& directoryPath, const std::string
 		s >> identifier;//先頭の識別子を読む
 
 		if (identifier == "v") {
-			Vector4 position;
+			Vector4 position{};
 			s >> position.x >> position.y >> position.z;
 			position.x *= -1.0f;
 			position.w = 1.0f;
 			positions.push_back(position);
 		} else if (identifier == "vt") {
-			Vector2 texcoord;
+			Vector2 texcoord{};
 			s >> texcoord.x >> texcoord.y;
 			texcoord.y = 1.f - texcoord.y;
 			texcoords.push_back(texcoord);
 		} else if (identifier == "vn") {
-			Vector3 normal;
+			Vector3 normal{};
 			s >> normal.x >> normal.y >> normal.z;
 			normal.x *= -1.0f;
 			normals.push_back(normal);
 		} else if (identifier == "f") {
-			VertexData triangle[3];
+			VertexData triangle[3]{};
 			//面は三角形限定。その他は未対応
 			for (int32_t faceVertex = 0; faceVertex < 3; ++faceVertex) {
 				std::string vertexDefinition;
 				s >> vertexDefinition;
 				//頂点の要素へのIndexは「位置/UV/法線」で格納されているので、分解してIndexを取得する
 				std::istringstream v(vertexDefinition);
-				uint32_t elementIndices[3];
+				uint32_t elementIndices[3]{};
 				for (int32_t element = 0; element < 3; ++element) {
 					std::string index;
 					std::getline(v, index, '/');// /区切りでインデックスを読んでいく
@@ -95,7 +95,7 @@ ModelData Model::LoadObjFile(const std::string& directoryPath, const std::string
 
 MaterialData Model::LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename) {
 #pragma region 1.中で必要となる変数の宣言
-	MaterialData materialData;
+	MaterialData materialData{};
 	std::string line;
 #pragma endregion
 
@@ -118,6 +118,9 @@ MaterialData Model::LoadMaterialTemplateFile(const std::string& directoryPath, c
 
 			materialData.textureFilePath = directoryPath + "/" + textureFileName;
 		}
+	}
+	if (materialData.textureFilePath.empty()) {
+		materialData.textureFilePath = "resources/white4x4.png";
 	}
 #pragma endregion
 
@@ -152,60 +155,11 @@ Model::Model(Engine* engine, const std::string& directoryPath, const std::string
 	vertexResource_->Map(0, nullptr, reinterpret_cast<void**>(&vertexData_));
 	std::memcpy(vertexData_, modelDatas_[myModelName_].vertices.data(), sizeof(VertexData) * modelDatas_[myModelName_].vertices.size());
 
-	//IndexResource
-	indexResource_ = CreateBufferResource(device_, sizeof(uint32_t) * 6);
-	//リソースの先頭のアドレスから使う
-	indexBufferView_.BufferLocation = indexResource_->GetGPUVirtualAddress();
-	//使用するリソースのサイズ
-	indexBufferView_.SizeInBytes = sizeof(uint32_t) * 6;
-	//format
-	indexBufferView_.Format = DXGI_FORMAT_R32_UINT;
-	indexResource_->Map(0, nullptr, reinterpret_cast<void**>(&indexData_));
-	indexData_[0] = 0;	indexData_[1] = 1;	indexData_[2] = 2;
-	indexData_[3] = 1;	indexData_[4] = 3;	indexData_[5] = 2;
 
-	//transformation用のリソースを作る。TransformationMatrix 1つ分のサイズを用意する
-	transformationResource_ = CreateBufferResource(device_, sizeof(TransformationMatrix));
-	//データを書き込む
-	//書き込むためのアドレスを取得
-	transformationResource_->Map(0, nullptr, reinterpret_cast<void**>(&transformationData_));
-	//単位行列を書き込んでおく
-	transformationData_->WVP = MakeIdentity4x4();
-	transformationData_->World = MakeIdentity4x4();
-	//トランスフォーム
-	transform_.scale = { 1.f,1.f,1.f };
-	transform_.translate = { 0.f,0.f,0.f };
-	// マテリアル用のリソースを作る。今回はcolor一つ分のサイズを用意
-	materialResource_ = CreateBufferResource(device_, sizeof(Material));
-	//マテリアルにデータを書き込む
-	//書き込むためのアドレスを取得
-	materialResource_->Map(0, nullptr, reinterpret_cast<void**>(&material_));
-	//今回は白を書き込んでみる
-	color_ = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-	material_->color = color_;
-	//Lightingを有効にする
-	material_->enableLighting = true;
-	//単位行列を書き込んでおく
-	material_->uvTransform = MakeIdentity4x4();
-	//uvTransform
-	uvTransform_ = {
-		{1.0f,1.0f,1.0f},
-		{0.0f,0.0f,0.0f},
-		{0.0f,0.0f,0.0f}
-	};
 	//テクスチャ読み込み
 	textureNum_ = textureSystem_->Lord(modelDatas_[myModelName_].material.textureFilePath);
 
 
-	//Outline用のResource
-	//transformation用のリソースを作る。TransformationMatrix 1つ分のサイズを用意する
-	transformationOutlineResource_ = CreateBufferResource(device_, sizeof(TransformationMatrix));
-	//データを書き込む
-	//書き込むためのアドレスを取得
-	transformationOutlineResource_->Map(0, nullptr, reinterpret_cast<void**>(&transformationOutlineData_));
-	//単位行列を書き込んでおく
-	transformationOutlineData_->WVP = MakeIdentity4x4();
-	transformationOutlineData_->World = MakeIdentity4x4();
 	// マテリアル用のリソースを作る。今回はcolor一つ分のサイズを用意
 	materialOutlineResource_ = CreateBufferResource(device_, sizeof(Material));
 	//マテリアルにデータを書き込む
@@ -218,87 +172,44 @@ Model::Model(Engine* engine, const std::string& directoryPath, const std::string
 
 Model::~Model() {
 	vertexResource_->Release();
-	transformationResource_->Release();
-	indexResource_->Release();
-	materialResource_->Release();
-
-	transformationOutlineResource_->Release();
 	materialOutlineResource_->Release();
 }
 
 void Model::Update() {
-	std::stringstream myNumString;
-	myNumString << myNumber_;
-	std::string name = "Model";
-	name = name + myNumString.str();
-	ImGui::Begin(name.c_str());
-	ImGui::DragFloat3("position", &transform_.translate.x, 0.01f);
-	ImGui::DragFloat3("rotate", &transform_.rotate.x, 0.01f);
-	ImGui::DragFloat3("scale", &transform_.scale.x, 0.01f);
-	ImGui::ColorEdit4("color", &color_.x);
-	ImGui::DragFloat3("uvPosition", &uvTransform_.translate.x, 0.01f);
-	ImGui::DragFloat3("uvRotate", &uvTransform_.rotate.x, 0.01f);
-	ImGui::DragFloat3("uvScale", &uvTransform_.scale.x, 0.01f);
-	ImGui::End();
+	//std::stringstream myNumString;
+	//myNumString << myNumber_;
+	//std::string name = "Model";
+	//name = name + myNumString.str();
+	//ImGui::Begin(name.c_str());
+	//ImGui::DragFloat3("position", &transform_.translate.x, 0.01f);
+	//ImGui::DragFloat3("rotate", &transform_.rotate.x, 0.01f);
+	//ImGui::DragFloat3("scale", &transform_.scale.x, 0.01f);
+	//ImGui::ColorEdit4("color", &color_.x);
+	//ImGui::DragFloat3("uvPosition", &uvTransform_.translate.x, 0.01f);
+	//ImGui::DragFloat3("uvRotate", &uvTransform_.rotate.x, 0.01f);
+	//ImGui::DragFloat3("uvScale", &uvTransform_.scale.x, 0.01f);
+	//ImGui::End();
 }
 
-void Model::Draw(const Camera& camera) {
-	Matrix4x4 worldMatrix = MakeAffineMatrix(transform_.scale, transform_.rotate, transform_.translate);
-	Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, camera.GetVeiwProjectionMatrix());
-	transformationData_->WVP = worldViewProjectionMatrix;
-	transformationData_->World = worldMatrix;
-
-	Matrix4x4 uvTransformMatrix = MakeAffineMatrix(uvTransform_.scale, uvTransform_.rotate, uvTransform_.translate);
-	material_->uvTransform = uvTransformMatrix;
-	material_->color = color_;
-
+void Model::Draw() {
 	commandList_->SetPipelineState(graphicsPipelineStateManager_->GetPipelineState("Object3dPSO"));
 	commandList_->IASetVertexBuffers(0, 1, &vertexBufferView_);//VBVを設定
 	//commandList_->IASetIndexBuffer(&indexBufferView_);//IBVを設定
 	//wvp用CBufferの場所を指定
-	commandList_->SetGraphicsRootConstantBufferView(1, transformationResource_->GetGPUVirtualAddress());
-	commandList_->SetGraphicsRootConstantBufferView(0, materialResource_->GetGPUVirtualAddress());
+	commandList_->SetGraphicsRootConstantBufferView(1, materialTransformResource->GetTransformationResource()->GetGPUVirtualAddress());
+	commandList_->SetGraphicsRootConstantBufferView(0, materialTransformResource->GetMaterialResource()->GetGPUVirtualAddress());
 	commandList_->SetGraphicsRootDescriptorTable(2,textureSystem_->GetTextureSrvHandleGpu(textureNum_));
 	commandList_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	//commandList_->DrawIndexedInstanced(UINT(modelData_.vertices.size()), 1, 0, 0, 0);
 	commandList_->DrawInstanced(UINT(modelDatas_[myModelName_].vertices.size()), 1, 0, 0);
 }
 
-void Model::Draw(const Camera& camera, Transforms transform) {
-	Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
-	Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, camera.GetVeiwProjectionMatrix());
-	transformationData_->WVP = worldViewProjectionMatrix;
-	transformationData_->World = worldMatrix;
-
-	Matrix4x4 uvTransformMatrix = MakeAffineMatrix(uvTransform_.scale, uvTransform_.rotate, uvTransform_.translate);
-	material_->uvTransform = uvTransformMatrix;
-	material_->color = color_;
-
-	commandList_->SetPipelineState(graphicsPipelineStateManager_->GetPipelineState("Object3dPSO"));
-	commandList_->IASetVertexBuffers(0, 1, &vertexBufferView_);//VBVを設定
-	//commandList_->IASetIndexBuffer(&indexBufferView_);//IBVを設定
-	//wvp用CBufferの場所を指定
-	commandList_->SetGraphicsRootConstantBufferView(1, transformationResource_->GetGPUVirtualAddress());
-	commandList_->SetGraphicsRootConstantBufferView(0, materialResource_->GetGPUVirtualAddress());
-	commandList_->SetGraphicsRootDescriptorTable(2, textureSystem_->GetTextureSrvHandleGpu(textureNum_));
-	commandList_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	//commandList_->DrawIndexedInstanced(UINT(modelData_.vertices.size()), 1, 0, 0, 0);
-	commandList_->DrawInstanced(UINT(modelDatas_[myModelName_].vertices.size()), 1, 0, 0);
-}
-
-
-void Model::DrawOutline(const Camera& camera) {
-	Transforms transform = transform_;
-	//transform.scale = transform.scale * 1.05f;
-	Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
-	Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, camera.GetVeiwProjectionMatrix());
-	transformationOutlineData_->WVP = worldViewProjectionMatrix;
-	transformationOutlineData_->World = worldMatrix;
+void Model::DrawOutline() {
+	
 	commandList_->SetPipelineState(graphicsPipelineStateManager_->GetPipelineState("Outline"));
 	commandList_->IASetVertexBuffers(0, 1, &vertexBufferView_);//VBVを設定
 	//commandList_->IASetIndexBuffer(&indexBufferView_);//IBVを設定
 	//wvp用CBufferの場所を指定
-	commandList_->SetGraphicsRootConstantBufferView(1, transformationOutlineResource_->GetGPUVirtualAddress());
 	commandList_->SetGraphicsRootConstantBufferView(0, materialOutlineResource_->GetGPUVirtualAddress());
 	commandList_->SetGraphicsRootDescriptorTable(2, textureSystem_->GetTextureSrvHandleGpu(textureNum_));
 	commandList_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -307,10 +218,10 @@ void Model::DrawOutline(const Camera& camera) {
 }
 
 
-void Model::DrawWithOutline(const Camera& camera) {
+void Model::DrawWithOutline() {
 	
-	Draw(camera);
-	DrawOutline(camera);
+	Draw();
+	DrawOutline();
 }
 
 
