@@ -7,3 +7,7 @@ struct DirectionalLight {
 	Vector3 direction;
 	float intensity;
 };
+
+struct DirectionalLights {
+	DirectionalLight light[3];
+};

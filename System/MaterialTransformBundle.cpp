@@ -5,6 +5,11 @@
 #include <d3d12.h>
 #include <Material.h>
 
+#include "imgui.h"
+#include "imgui_impl_dx12.h"
+#include "imgui_impl_win32.h"
+
+
 MaterialTransformBundle::MaterialTransformBundle(Vector4& color, Transforms& transform, ID3D12Device* device) {
 	//transformation用のリソースを作る。TransformationMatrix 1つ分のサイズを用意する
 	transformationResource_ = CreateBufferResource(device, sizeof(TransformationMatrix));
@@ -48,6 +53,18 @@ void MaterialTransformBundle::PreDraw(const Camera& camera) {
 	transformationData_->World = worldMatrix;
 
 	Matrix4x4 uvTransformMatrix = MakeAffineMatrix(uvTransform_.scale, uvTransform_.rotate, uvTransform_.translate);
+}
+
+void MaterialTransformBundle::ImguiUpdate() {
+	ImGui::Begin("materialTransform");
+	ImGui::DragFloat3("position", &transform_.translate.x, 0.01f);
+	ImGui::DragFloat3("rotate", &transform_.rotate.x, 0.01f);
+	ImGui::DragFloat3("scale", &transform_.scale.x, 0.01f);
+	ImGui::ColorEdit4("color", &material_->color.x);
+	ImGui::DragFloat3("uvPosition", &uvTransform_.translate.x, 0.01f);
+	ImGui::DragFloat3("uvRotate", &uvTransform_.rotate.x, 0.01f);
+	ImGui::DragFloat3("uvScale", &uvTransform_.scale.x, 0.01f);
+	ImGui::End();
 }
 
 void MaterialTransformBundle::SetColor(Vector4& color) { material_->color = color; }

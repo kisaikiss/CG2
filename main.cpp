@@ -72,7 +72,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Triangle* triangle1 = new Triangle(engine);
 	Camera* camera = new Camera();
 	Sprite* sprite = new Sprite(engine,"resources/uvChecker.png");
-	Model* model = new Model(engine,"resources/evaluationTaskResources","bunny.obj");
+	Model* model = new Model(engine,"resources/player","AL3_player.obj");
+	model->SetTextureNum(engine->GetTextureSystem()->Lord("resources/white4x4.png"));
 	Transforms transform{};
 	transform.scale = Vector3(1.f, 1.f, 1.f);
 	Vector4 color = Vector4(1.f, 1.f, 1.f, 1.f);
@@ -98,10 +99,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		/*------------------------*/
 
 		input->Update();
-		sphere->Update();
-		triangle1->Update();
+		//sphere->Update();
+		//triangle1->Update();
 		model->Update();
-		sprite->Update();
+		//sprite->Update();
+		materialTransform->ImguiUpdate();
 
 		if (input->GetPressingCount('0') == 1) {
 			if (isDebugCamera == true) {
@@ -135,7 +137,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		//debugModel->DrawWithOutline(*rialCamera);
 		//debugModel->Draw(*rialCamera);
 
-		sprite->Draw();
+		//sprite->Draw();
 
 		materialTransform->PreDraw(*rialCamera);
 		model->DrawWithOutline();

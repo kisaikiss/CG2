@@ -97,7 +97,7 @@ private:
 
 	//光源
 	ID3D12Resource* directionalLightResource_ = nullptr;
-	DirectionalLight* directionalLightData_ = nullptr;
+	DirectionalLights* directionalLightData_ = nullptr;
 
 	/// <summary>
 	/// DXC初期化

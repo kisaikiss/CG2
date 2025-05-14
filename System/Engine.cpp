@@ -283,12 +283,18 @@ void Engine::CreatePSO() {
 void Engine::InitializeLightAndViewport() {
 
 	//光源
-	directionalLightResource_ = CreateBufferResource(directXCommon_->GetDevice(), sizeof(DirectionalLight));
+	directionalLightResource_ = CreateBufferResource(directXCommon_->GetDevice(), sizeof(DirectionalLights));
 	directionalLightResource_->Map(0, nullptr, reinterpret_cast<void**>(&directionalLightData_));
 
-	directionalLightData_->color = { 1.0f,1.0f,1.0f,1.0f };
-	directionalLightData_->direction = { 0.0f,-1.0f,0.0f };
-	directionalLightData_->intensity = 1.0f;
+	directionalLightData_->light[0].color = {1.0f,1.0f,1.0f,1.0f};
+	directionalLightData_->light[0].direction = { 0.0f,-1.0f,0.0f };
+	directionalLightData_->light[0].intensity = 1.0f;
+	directionalLightData_->light[1].color = { 1.0f,0.0f,1.0f,1.0f };
+	directionalLightData_->light[1].direction = { 1.0f, 0.0f,0.0f };
+	directionalLightData_->light[1].intensity = 1.0f;
+	directionalLightData_->light[2].color = { 1.0f,1.0f,0.0f,1.0f };
+	directionalLightData_->light[2].direction = { 0.0f, 0.0f, -1.0f };
+	directionalLightData_->light[2].intensity = 1.0f;
 
 	// ビューポート
 	//クライアント領域のサイズと一緒にして画面全体に表示
@@ -314,14 +320,22 @@ bool Engine::ProcessMessage() {
 void Engine::UpdateLight() {
 #ifdef _DEBUG
 	ImGui::Begin("Light");
-	ImGui::ColorEdit4("color", &directionalLightData_->color.x);
-	ImGui::DragFloat3("direction", &directionalLightData_->direction.x, 0.1f);
-	ImGui::DragFloat("itensty", &directionalLightData_->intensity, 0.1f);
+	ImGui::ColorEdit4("color1", &directionalLightData_->light[0].color.x);
+	ImGui::DragFloat3("direction1", &directionalLightData_->light[0].direction.x, 0.1f);
+	ImGui::DragFloat("itensty1", &directionalLightData_->light[0].intensity, 0.1f);
+	ImGui::ColorEdit4("color2", &directionalLightData_->light[1].color.x);
+	ImGui::DragFloat3("direction2", &directionalLightData_->light[1].direction.x, 0.1f);
+	ImGui::DragFloat("itensty2", &directionalLightData_->light[1].intensity, 0.1f);
+	ImGui::ColorEdit4("color3", &directionalLightData_->light[2].color.x);
+	ImGui::DragFloat3("direction3", &directionalLightData_->light[2].direction.x, 0.1f);
+	ImGui::DragFloat("itensty3", &directionalLightData_->light[2].intensity, 0.1f);
 	ImGui::End();
 #endif // _DEBUG
 
 	
-	directionalLightData_->direction = Normalize(directionalLightData_->direction);
+	directionalLightData_->light[0].direction = Normalize(directionalLightData_->light[0].direction);
+	directionalLightData_->light[1].direction = Normalize(directionalLightData_->light[1].direction);
+	directionalLightData_->light[2].direction = Normalize(directionalLightData_->light[2].direction);
 }
 
 void Engine::PreDraw() {

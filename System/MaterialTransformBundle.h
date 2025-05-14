@@ -22,6 +22,8 @@ public:
 
 	void PreDraw(const Camera& camera);
 
+	void ImguiUpdate();
+
 	/// <summary>
 	/// トランスフォームを入れる
 	/// </summary>
