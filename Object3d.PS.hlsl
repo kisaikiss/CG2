@@ -29,7 +29,7 @@ struct PixelShaderOutput {
 
 float4 CreateLight(VertexShaderOutput input)
 {
-    float4 result;
+    float4 result = 0;
     for (int i = 0; i < 3; i++)
     {
         float NdotL = dot(normalize(input.normal), -gLight.light[i].direction);
