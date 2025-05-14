@@ -14,6 +14,7 @@
 #include "D3DResourceLeakChecker.h"
 #include "Audio.h"
 #include "MaterialTransformBundle.h"
+#include "TriangularPyramid.h"
 
 #include "imgui.h"
 #include "imgui_impl_dx12.h"
@@ -65,20 +66,23 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	Audio* audio = new Audio();
 
-	uint32_t soundNum = audio->SoundLoadWave("resources/Alarm01.wav");
-	audio->SoundPlayWave(soundNum);
+	//uint32_t soundNum = audio->SoundLoadWave("resources/Alarm01.wav");
+	//audio->SoundPlayWave(soundNum);
+
+	TriangularPyramid::Initialize(engine);
+	TriangularPyramid* trianglePyramid = new TriangularPyramid(engine);
+	trianglePyramid->SetTextureNum(engine->GetTextureSystem()->Lord("resources/white4x4.png"));
 	
-	Sphere* sphere = new Sphere(engine);
-	Triangle* triangle1 = new Triangle(engine);
 	Camera* camera = new Camera();
-	Sprite* sprite = new Sprite(engine,"resources/uvChecker.png");
-	Model* model = new Model(engine,"resources/player","AL3_player.obj");
-	model->SetTextureNum(engine->GetTextureSystem()->Lord("resources/white4x4.png"));
+	//Model* model = new Model(engine,"resources/player","AL3_player.obj");
+	//model->SetTextureNum(engine->GetTextureSystem()->Lord("resources/white4x4.png"));
 	Transforms transform{};
 	transform.scale = Vector3(1.f, 1.f, 1.f);
 	Vector4 color = Vector4(1.f, 1.f, 1.f, 1.f);
 	MaterialTransformBundle* materialTransform = new MaterialTransformBundle(color, transform, engine->GetDevice());
-	model->SetMaterialTransform(materialTransform);
+	//model->SetMaterialTransform(materialTransform);
+
+	trianglePyramid->SetMaterialTransform(materialTransform);
 
 	Input* input = new Input();
 	DebugCamera* debugCamera = new DebugCamera(input);
@@ -101,7 +105,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		input->Update();
 		//sphere->Update();
 		//triangle1->Update();
-		model->Update();
+		//model->Update();
 		//sprite->Update();
 		materialTransform->ImguiUpdate();
 
@@ -139,9 +143,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		//sprite->Draw();
 
-		materialTransform->PreDraw(*rialCamera);
-		model->DrawWithOutline();
+		//materialTransform->PreDraw(*rialCamera);
+		//model->DrawWithOutline();
 		//model->Draw(*rialCamera);
+
+		trianglePyramid->Draw(rialCamera);
 
 
 		engine->PostDraw();
@@ -149,13 +155,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		/*↑↑描画処理ここまで↑↑*/
 		/*------------------------*/
 	}
-	delete audio;
-	delete sphere;
-	delete sprite;
-	delete triangle1;
+	delete audio;	
 	delete camera;
 	delete debugCamera;
-	delete model;
+	delete trianglePyramid;
+	TriangularPyramid::Finalize();
+	//delete model;
 	delete materialTransform;
 	delete input;
 	engine->Finalize();

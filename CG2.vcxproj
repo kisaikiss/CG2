@@ -120,6 +120,7 @@ copy "$(windowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="Shape\Model.cpp" />
     <ClCompile Include="Shape\Sphere.cpp" />
     <ClCompile Include="Shape\Triangle.cpp" />
+    <ClCompile Include="Shape\TriangularPyramid.cpp" />
     <ClCompile Include="System\Camera.cpp" />
     <ClCompile Include="System\ConvertString.cpp" />
     <ClCompile Include="System\D3DResourceLeakChecker.cpp" />
@@ -162,6 +163,7 @@ copy "$(windowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="Shape\Model.h" />
     <ClInclude Include="Shape\Sphere.h" />
     <ClInclude Include="Shape\Triangle.h" />
+    <ClInclude Include="Shape\TriangularPyramid.h" />
     <ClInclude Include="System\Camera.h" />
     <ClInclude Include="System\ConvertString.h" />
     <ClInclude Include="System\D3DResourceLeakChecker.h" />

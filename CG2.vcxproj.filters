@@ -58,6 +58,9 @@
     <Filter Include="Shader">
       <UniqueIdentifier>{133cdda0-20dd-4169-a522-46211629c9b7}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ソース ファイル\Shape\TriangularPyramid">
+      <UniqueIdentifier>{ea0757ec-bf5e-4fbb-814a-3185c3f6ff0e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -152,6 +155,9 @@
     </ClCompile>
     <ClCompile Include="Math\Easing.cpp">
       <Filter>ソース ファイル\Math</Filter>
+    </ClCompile>
+    <ClCompile Include="Shape\TriangularPyramid.cpp">
+      <Filter>ソース ファイル\Shape\TriangularPyramid</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -280,6 +286,9 @@
     </ClInclude>
     <ClInclude Include="Math\Easing.h">
       <Filter>ソース ファイル\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Shape\TriangularPyramid.h">
+      <Filter>ソース ファイル\Shape\TriangularPyramid</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
